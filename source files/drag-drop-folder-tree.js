@@ -1,27 +1,31 @@
 /************************************************************************************************************
-Drag and drop folder tree
-Copyright (C) 2006  DTHMLGoodies.com, Alf Magne Kalleland
+//ELMS: Outline Designer - Ajax book / general usability improvements for Drupal 5.x
+//Copyright (C) 2008  The Pennsylvania State University
+//
+//Bryan Ollendyke
+//bto108@psu.edu
+//
+//Keith D. Bailey
+//kdb163@psu.edu
+//
+//12 Borland
+//University Park, PA 16802
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-
-Dhtmlgoodies.com., hereby disclaims all copyright interest in this script
-written by Alf Magne Kalleland.
-
-Alf Magne Kalleland, 2006
-Owner of DHTMLgoodies.com
-
+Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies.com, Alf Magne Kalleland
 ************************************************************************************************************/  
   
   var JSTreeObj;
@@ -476,8 +480,7 @@ Owner of DHTMLgoodies.com
     //ajax here
     $.ajax({
        type: "POST",
-       url: AJAX_URL,
-       data: "action=drag_drop_update&parent=" + parent + "&nid=" + JSTreeObj.dragNode_source.id.substring(4),
+       url: AJAX_URL + "drag_drop_update/" + parent + "/" + JSTreeObj.dragNode_source.id.substring(4),
        success: function(msg){
          document.getElementById("tree_container").className="tree_normal";
          }
@@ -617,8 +620,7 @@ Owner of DHTMLgoodies.com
       //need to come up with some way of figuring out which new_type they clicked on
       $.ajax({
           type: "POST",
-          url: AJAX_URL,
-          data: "action=change_type&nid=" + nodenum + "&new_type=" + new_type,
+          url: AJAX_URL + "change_type/" + nodenum + "/" + new_type,
           success: function(msg){
             document.getElementById("iconIMGnode" + nodenum).src = DRUPAL_PATH + '/' + msg;
           }
@@ -633,8 +635,7 @@ Owner of DHTMLgoodies.com
       if(root != 0 && confirm("Duplicate this entire node structure?")){
         $.ajax({
          type: "POST",
-         url: AJAX_URL,
-         data: "action=duplicate_nodes&root=" + root,
+         url: AJAX_URL + "duplicate_nodes/" + root,
          success: function(msg){
              //a new root has been made so we can just load it like any other
           //the return will be the node to load
@@ -661,8 +662,7 @@ Owner of DHTMLgoodies.com
       }else{  
         $.ajax({
           type: "POST",
-          url: AJAX_URL,
-          data: "action=add_node&parent=" + nodenum + "&title=" + title,
+          url: AJAX_URL + "add_node/" + nodenum + "/" + title,
           success: function(msg){
             ary = PHP_Unserialize(msg);
             next_id = ary[0];
@@ -745,8 +745,7 @@ Owner of DHTMLgoodies.com
         document.getElementById("tree_container").className="tree_saving";
         $.ajax({
            type: "POST",
-           url: AJAX_URL,
-           data: "action=delete&ids=" + serialize(del),
+           url: AJAX_URL + "delete/" + serialize(del),
            success: function(msg){
              var parentRef = obj.parentNode.parentNode;
              obj.parentNode.removeChild(obj);
@@ -776,8 +775,7 @@ Owner of DHTMLgoodies.com
             document.getElementById("tree_container").className="tree_saving";
             $.ajax({
               type: "POST",
-              url: AJAX_URL,
-              data: "action=rename&nid=" + nid + "&newtitle=" + inputObj.value,
+              url: AJAX_URL + "rename/" + nid + "/" + inputObj.value,
               success: function(msg){
                 if(inputObj.parentNode.parentNode.parentNode.id == "node0"){
                   //try to force switching back to the same option even tho the title changed
@@ -907,8 +905,7 @@ Owner of DHTMLgoodies.com
           var menuModelIcons = new DHTMLGoodies_menuModel();
           $.ajax({
             type: "POST",
-            url: AJAX_URL,
-            data: "action=get_icons",
+            url: AJAX_URL + "get_icons",
             success: function(msg){
               var ary = Array();
               if(msg != ''){

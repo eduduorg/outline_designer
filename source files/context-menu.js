@@ -1,28 +1,31 @@
 /************************************************************************************************************
-Context menu
-Copyright (C) 2006  DTHMLGoodies.com, Alf Magne Kalleland
+//ELMS: Outline Designer - Ajax book / general usability improvements for Drupal 5.x
+//Copyright (C) 2008  The Pennsylvania State University
+//
+//Bryan Ollendyke
+//bto108@psu.edu
+//
+//Keith D. Bailey
+//kdb163@psu.edu
+//
+//12 Borland
+//University Park, PA 16802
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-
-Dhtmlgoodies.com., hereby disclaims all copyright interest in this script
-written by Alf Magne Kalleland.
-
-Alf Magne Kalleland, 2006
-Owner of DHTMLgoodies.com
-
-
+Built off the Context menu Library Copyright (C) 2006  DTHMLGoodies.com, Alf Magne Kalleland
 ************************************************************************************************************/  
 
 DHTMLGoodies_menuModel = function()
