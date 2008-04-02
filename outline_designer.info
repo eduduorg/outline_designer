@@ -1,4 +1,3 @@
 name = Outline Designer
 description = Outline Designer is a powerful module that allows users to reorganize their site based on an Ajax book outline.  This makes much of the current book, menu, and block functionality more usable.
 dependencies = book upload
-version = "5.x-BETA"

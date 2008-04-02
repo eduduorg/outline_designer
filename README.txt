@@ -24,13 +24,11 @@ You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-INSTALATION (2 Steps)
+INSTALATION
 *Place the outline_designer directory in the correct modules folder as you would any other Drupal module
-*Take the ajax.php file and move it to the root of your drupal installation /YOU_DRUPAL_SITE/ajax.php
-
-Activate the module and then goto the settings page to set up the few options that there are.  
-Then goto your_drupal_site/outline_designer to access the outline designer.  
-There's also a permission that you can activate to give people access to the outline_designer page.
+*Activate the module and then goto the settings page to set up the few options that there are.  
+*Go to your_drupal_site/outline_designer to access the outline designer.  
+*There's also a permission that you can activate to give people access to the outline_designer page / functions.
 
 SO LETS TALK ABOUT PERSMISSIONS...
 

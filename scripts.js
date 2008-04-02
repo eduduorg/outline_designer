@@ -1,3 +1,26 @@
+function PHP_Unserialize(input)
+{ var result = PHP_Unserialize_(input); return result[0];}
+function PHP_Unserialize_(input)
+{ var length = 0; switch (input.charAt(0)) { case 'a':
+length = PHP_Unserialize_GetLength(input); input = input.substr(String(length).length + 4); var arr = new Array(); var key = null; var value = null; for (var i=0; i<length; ++i) { key = PHP_Unserialize_(input); input = key[1]; value = PHP_Unserialize_(input); input = value[1]; arr[key[0]] = value[0];}
+input = input.substr(1); return [arr, input]; break; case 'O':
+length = PHP_Unserialize_GetLength(input); var classname = String(input.substr(String(length).length + 4, length)); input = input.substr(String(length).length + 6 + length); var numProperties = Number(input.substring(0, input.indexOf(':')))
+input = input.substr(String(numProperties).length + 2); var obj = new Object(); var property = null; var value = null; for (var i=0; i<numProperties; ++i) { key = PHP_Unserialize_(input); input = key[1]; key[0] = key[0].replace(new RegExp('^\x00' + classname + '\x00'), ''); key[0] = key[0].replace(new RegExp('^\x00\\*\x00'), ''); value = PHP_Unserialize_(input); input = value[1]; obj[key[0]] = value[0];}
+input = input.substr(1); return [obj, input]; break; case 's':
+length = PHP_Unserialize_GetLength(input); return [String(input.substr(String(length).length + 4, length)), input.substr(String(length).length + 6 + length)]; break; case 'i':
+case 'd':
+var num = Number(input.substring(2, input.indexOf(';'))); return [num, input.substr(String(num).length + 3)]; break; case 'b':
+var bool = (input.substr(2, 1) == 1); return [bool, input.substr(4)]; break; case 'N':
+return [null, input.substr(2)]; break; case 'o':
+case 'r':
+case 'C':
+case 'R':
+case 'U':
+alert('Error: Unsupported PHP data type found!'); default:
+return [null, null]; break;}
+}
+function PHP_Unserialize_GetLength(input)
+{ input = input.substring(2); var length = Number(input.substr(0, input.indexOf(':'))); return length;}
 function JPSpan_Encode_PHP() { this.Serialize = new JPSpan_Serialize(this);}; JPSpan_Encode_PHP.prototype = { contentType: 'text/plain; charset=US-ASCII', encode: function(data) { return this.Serialize.serialize(data);}, encodeInteger: function(v) { return 'i:'+v+';';}, encodeDouble: function(v) { return 'd:'+v+';';}, encodeString: function(v) { var s = ''
 for(var n=0; n<v.length; n++) { var c=v.charCodeAt(n); if (c<128) { s += String.fromCharCode(c);}
 }
@@ -22,29 +45,6 @@ function JPSpan_Util_Data() { this.Serialize = new JPSpan_Serialize(this); this.
 }, encodeArray: function(v, Serializer) { var a=v; var indexed = new Array(); var out="Array("+a.length+")\n"; this.indent += "  "; if ( a.length>0 ) { for (var i=0; i < a.length; i++) { indexed[i] = true; out+=this.indent+"["+i+"]"; if ( (a[i]+'') == 'undefined') { out+= " = undefined\n"; continue;}; out+= " = "+Serializer.serialize(a[i])+"\n";};}; var assoc=''; for ( var prop in a ) { if ( indexed[prop] ) { continue;}; assoc+=this.indent+"[\""+prop+"\"]"; if ( (a[prop]+'') == 'undefined') { assoc+= " = undefined\n"; continue;}; assoc+= " = "+Serializer.serialize(a[prop])+"\n";}; if ( assoc.length > 0 ) { out += assoc;}; this.indent = this.indent.substr(0,this.indent.length-2); return out;}, encodeObject: function(v, Serializer, cname) { var o=v; if (o==null) return "Null\n"; var out="Object("+cname+")\n"; this.indent += "  "; for (var prop in o) { out+=this.indent+"."+prop+" = "; if (o[prop]==null) { out+="null\n"; continue;}; out+=Serializer.serialize(o[prop])+"\n";}; this.indent = this.indent.substr(0,this.indent.length-2); return out;}, encodeError: function(v, Serializer, cname) { var e = new Object(); if ( !v.name ) { e.name = cname; e.message = v.description;} else { e.name = v.name; e.message = v.message;}; return this.encodeObject(e,Serializer,cname);}
 }; function var_dump(data) { var Data = new JPSpan_Util_Data(); return Data.dump(data);}
 function serialize(data) { var Encoder = new JPSpan_Encode_PHP(); return Encoder.encode(data);}
-function PHP_Unserialize(input)
-{ var result = PHP_Unserialize_(input); return result[0];}
-function PHP_Unserialize_(input)
-{ var length = 0; switch (input.charAt(0)) { case 'a':
-length = PHP_Unserialize_GetLength(input); input = input.substr(String(length).length + 4); var arr = new Array(); var key = null; var value = null; for (var i=0; i<length; ++i) { key = PHP_Unserialize_(input); input = key[1]; value = PHP_Unserialize_(input); input = value[1]; arr[key[0]] = value[0];}
-input = input.substr(1); return [arr, input]; break; case 'O':
-length = PHP_Unserialize_GetLength(input); var classname = String(input.substr(String(length).length + 4, length)); input = input.substr(String(length).length + 6 + length); var numProperties = Number(input.substring(0, input.indexOf(':')))
-input = input.substr(String(numProperties).length + 2); var obj = new Object(); var property = null; var value = null; for (var i=0; i<numProperties; ++i) { key = PHP_Unserialize_(input); input = key[1]; key[0] = key[0].replace(new RegExp('^\x00' + classname + '\x00'), ''); key[0] = key[0].replace(new RegExp('^\x00\\*\x00'), ''); value = PHP_Unserialize_(input); input = value[1]; obj[key[0]] = value[0];}
-input = input.substr(1); return [obj, input]; break; case 's':
-length = PHP_Unserialize_GetLength(input); return [String(input.substr(String(length).length + 4, length)), input.substr(String(length).length + 6 + length)]; break; case 'i':
-case 'd':
-var num = Number(input.substring(2, input.indexOf(';'))); return [num, input.substr(String(num).length + 3)]; break; case 'b':
-var bool = (input.substr(2, 1) == 1); return [bool, input.substr(4)]; break; case 'N':
-return [null, input.substr(2)]; break; case 'o':
-case 'r':
-case 'C':
-case 'R':
-case 'U':
-alert('Error: Unsupported PHP data type found!'); default:
-return [null, null]; break;}
-}
-function PHP_Unserialize_GetLength(input)
-{ input = input.substring(2); var length = Number(input.substr(0, input.indexOf(':'))); return length;}
 DHTMLGoodies_menuModel = function()
 { var menuItems; this.menuItems = new Array();}
 DHTMLGoodies_menuModel.prototype = { addItem : function(id,itemText,itemIcon,url,parentId,jsFunction)
@@ -180,7 +180,7 @@ var img = JSTreeObj.dragNode_destination.getElementsByTagName('IMG')[0]; img.sty
 var tmpObj = JSTreeObj.dragNode_parent; var lis = tmpObj.getElementsByTagName('LI'); if(lis.length==0){ var img = tmpObj.parentNode.getElementsByTagName('IMG')[0]; img.style.visibility='hidden'; tmpObj.parentNode.removeChild(tmpObj);}
 }else{ if(JSTreeObj.dragNode_sourceNextSib){ JSTreeObj.dragNode_parent.insertBefore(JSTreeObj.dragNode_source,JSTreeObj.dragNode_sourceNextSib);}else{ JSTreeObj.dragNode_parent.appendChild(JSTreeObj.dragNode_source);}
 }
-JSTreeObj.dropTargetIndicator.style.display='none'; JSTreeObj.dragDropTimer = -1; if(showMessage && JSTreeObj.messageMaximumDepthReached)alert(JSTreeObj.messageMaximumDepthReached); update_weights(); parent = document.getElementById(JSTreeObj.dragNode_source.id).parentNode.parentNode.id.substring(4); document.getElementById("tree_container").className="tree_saving"; $.ajax({ type: "POST", url: AJAX_URL, data: "action=drag_drop_update&parent=" + parent + "&nid=" + JSTreeObj.dragNode_source.id.substring(4), success: function(msg){ document.getElementById("tree_container").className="tree_normal";}
+JSTreeObj.dropTargetIndicator.style.display='none'; JSTreeObj.dragDropTimer = -1; if(showMessage && JSTreeObj.messageMaximumDepthReached)alert(JSTreeObj.messageMaximumDepthReached); update_weights(); parent = document.getElementById(JSTreeObj.dragNode_source.id).parentNode.parentNode.id.substring(4); document.getElementById("tree_container").className="tree_saving"; $.ajax({ type: "POST", url: AJAX_URL + "drag_drop_update/" + parent + "/" + JSTreeObj.dragNode_source.id.substring(4), success: function(msg){ document.getElementById("tree_container").className="tree_normal";}
 });}
 , createDropIndicator : function()
 { this.dropTargetIndicator = document.createElement('DIV'); this.dropTargetIndicator.style.position = 'absolute'; this.dropTargetIndicator.style.display='none'; var img = document.createElement('IMG'); img.src = this.imageFolder + 'dragDrop_ind1.gif'; img.id = 'dragDropIndicatorImage'; this.dropTargetIndicator.appendChild(img); document.body.appendChild(this.dropTargetIndicator);}
@@ -212,15 +212,15 @@ var message = 'Delete "' + obj2.innerHTML + '" ?'; if(this.hasSubNodes(obj2.pare
 }
 , nodeContent : function(obj1,obj2){ load_node(obj2.parentNode.id);}
 , changeItemType: function(obj1,obj2){ if(obj2.nodeName == 'SPAN' || obj2.nodeName == 'IMG'){ obj2 = obj2.parentNode.getElementsByTagName("A")[0];}else if(obj2 == false){ obj1.parentNode.parentNode.style.visibility='hidden';}
-var nodenum = obj2.id.substring(8); var new_type = obj1.getElementsByTagName("A")[0].innerHTML; $.ajax({ type: "POST", url: AJAX_URL, data: "action=change_type&nid=" + nodenum + "&new_type=" + new_type, success: function(msg){ document.getElementById("iconIMGnode" + nodenum).src = DRUPAL_PATH + '/' + msg;}
+var nodenum = obj2.id.substring(8); var new_type = obj1.getElementsByTagName("A")[0].innerHTML; $.ajax({ type: "POST", url: AJAX_URL + "change_type/" + nodenum + "/" + new_type, success: function(msg){ document.getElementById("iconIMGnode" + nodenum).src = DRUPAL_PATH + '/' + msg;}
 });}
 , duplicateTree : function (obj1,obj2){ if(obj2.nodeName == 'A' || obj2.nodeName == 'SPAN' || obj2.nodeName == 'IMG'){ obj2 = obj2.parentNode;}
-var root = obj2.id.substring("4"); if(root != 0 && confirm("Duplicate this entire node structure?")){ $.ajax({ type: "POST", url: AJAX_URL, data: "action=duplicate_nodes&root=" + root, success: function(msg){ load_outline(document.getElementById("selected_outline").value);}
+var root = obj2.id.substring("4"); if(root != 0 && confirm("Duplicate this entire node structure?")){ $.ajax({ type: "POST", url: AJAX_URL + "duplicate_nodes/" + root, success: function(msg){ load_outline(document.getElementById("selected_outline").value);}
 });}
 }
 , addItem : function(obj1,obj2)
 { var next_id = ''; var ary = Array(); if(obj2.nodeName == 'SPAN' || obj2.nodeName == 'IMG'){ obj2 = obj2.parentNode.getElementsByTagName("A")[0];}else if(obj2 == false){ obj1.parentNode.parentNode.style.visibility='hidden';}
-var nodenum = obj2.id.substring(8); document.getElementById("tree_container").className="tree_saving"; var title = prompt("Node Title:"); if(title == null){ document.getElementById("tree_container").className="tree_normal";}else{ $.ajax({ type: "POST", url: AJAX_URL, data: "action=add_node&parent=" + nodenum + "&title=" + title, success: function(msg){ ary = PHP_Unserialize(msg); next_id = ary[0]; nodename = 'node' + next_id; var li = document.createElement('LI'); li.id = nodename; var span = document.createElement('SPAN'); span.id = 'nodeLevel' + next_id; span.innerHTML = '&nbsp;&nbsp;'; var a = document.createElement('A'); a.href = '#'; a.innerHTML = title; var ul = document.createElement('UL'); li.appendChild(span); li.appendChild(a); li.appendChild(ul); parentid = 'node' + nodenum; document.getElementById(parentid).getElementsByTagName("UL")[0].appendChild(li); if(OUTLINE_POSTS == 1){ document.getElementById(nodename).setAttribute("noadd","false");}else{ document.getElementById(nodename).setAttribute("noadd","true");}
+var nodenum = obj2.id.substring(8); document.getElementById("tree_container").className="tree_saving"; var title = prompt("Node Title:"); if(title == null){ document.getElementById("tree_container").className="tree_normal";}else{ $.ajax({ type: "POST", url: AJAX_URL + "add_node/" + nodenum + "/" + title, success: function(msg){ ary = PHP_Unserialize(msg); next_id = ary[0]; nodename = 'node' + next_id; var li = document.createElement('LI'); li.id = nodename; var span = document.createElement('SPAN'); span.id = 'nodeLevel' + next_id; span.innerHTML = '&nbsp;&nbsp;'; var a = document.createElement('A'); a.href = '#'; a.innerHTML = title; var ul = document.createElement('UL'); li.appendChild(span); li.appendChild(a); li.appendChild(ul); parentid = 'node' + nodenum; document.getElementById(parentid).getElementsByTagName("UL")[0].appendChild(li); if(OUTLINE_POSTS == 1){ document.getElementById(nodename).setAttribute("noadd","false");}else{ document.getElementById(nodename).setAttribute("noadd","true");}
 if(ary[3] == 1){ document.getElementById(nodename).setAttribute("norename","false"); document.getElementById(nodename).setAttribute("nodelete","false");}else{ document.getElementById(nodename).setAttribute("norename","true"); document.getElementById(nodename).setAttribute("nodelete","true");}
 if(DRAG_AND_DROP_CONTENT == 0){ document.getElementById(nodename).setAttribute("noDrag","true");}
 document.getElementById(span.id).setAttribute('ondblclick','load_view_node(this.parentNode.id);'); document.getElementById(li.id).getElementsByTagName("A")[0].setAttribute('ondblclick','load_view_node(this.parentNode.id);'); obj1.parentNode.parentNode.style.visibility = 'hidden'; var pimg = document.getElementById(parentid).getElementsByTagName("IMG")[0]; pimg.style.visibility="visible"; pimg.src = pimg.src.replace(JSTreeObj.plusImage,JSTreeObj.minusImage); document.getElementById(parentid).getElementsByTagName("UL")[0].style.display="block"; treeObj.initTree();}, complete: function(ar1,ar2){ document.getElementById("iconIMGnode" + next_id).src = DRUPAL_PATH + '/' + ary[2]; update_weights();}
@@ -231,11 +231,11 @@ document.getElementById(span.id).setAttribute('ondblclick','load_view_node(this.
 , __deleteItem_step2 : function(obj)
 { var del = Array(); var answer = true; del.push(obj.id.substring(4)); var lis = obj.getElementsByTagName('LI'); for(var no=0;no<lis.length;no++){ del.push(lis[no].id.substring(4));}
 if(del.length > 1){ answer = confirm("This will Delete all subnodes, are you sure?");}
-if(answer){ document.getElementById("tree_container").className="tree_saving"; $.ajax({ type: "POST", url: AJAX_URL, data: "action=delete&ids=" + serialize(del), success: function(msg){ var parentRef = obj.parentNode.parentNode; obj.parentNode.removeChild(obj); document.getElementById("tree_container").className="tree_normal"; update_weights();}
+if(answer){ document.getElementById("tree_container").className="tree_saving"; $.ajax({ type: "POST", url: AJAX_URL + "delete/" + serialize(del), success: function(msg){ var parentRef = obj.parentNode.parentNode; obj.parentNode.removeChild(obj); document.getElementById("tree_container").className="tree_normal"; update_weights();}
 });}
 }
 , __saveTextBoxChanges : function(e,inputObj)
-{ if(!inputObj && this)inputObj = this; if(document.all)e = event; if(e.keyCode && e.keyCode==27){ JSTreeObj.__cancelRename(e,inputObj); return;}else{ inputObj.style.display='none'; inputObj.nextSibling.style.visibility='visible'; if(inputObj.value.length>0){ if(inputObj.nextSibling.innerHTML != inputObj.value){ inputObj.nextSibling.innerHTML = inputObj.value; nid = inputObj.parentNode.id.substring(4); document.getElementById("tree_container").className="tree_saving"; $.ajax({ type: "POST", url: AJAX_URL, data: "action=rename&nid=" + nid + "&newtitle=" + inputObj.value, success: function(msg){ if(inputObj.parentNode.parentNode.parentNode.id == "node0"){ var options = document.getElementById("selected_outline").options; for(i=0;i<options.length;i++){ if(options[i].value == document.getElementById("selected_outline").value){ options[i].text = inputObj.value;}
+{ if(!inputObj && this)inputObj = this; if(document.all)e = event; if(e.keyCode && e.keyCode==27){ JSTreeObj.__cancelRename(e,inputObj); return;}else{ inputObj.style.display='none'; inputObj.nextSibling.style.visibility='visible'; if(inputObj.value.length>0){ if(inputObj.nextSibling.innerHTML != inputObj.value){ inputObj.nextSibling.innerHTML = inputObj.value; nid = inputObj.parentNode.id.substring(4); document.getElementById("tree_container").className="tree_saving"; $.ajax({ type: "POST", url: AJAX_URL + "rename/" + nid + "/" + inputObj.value, success: function(msg){ if(inputObj.parentNode.parentNode.parentNode.id == "node0"){ var options = document.getElementById("selected_outline").options; for(i=0;i<options.length;i++){ if(options[i].value == document.getElementById("selected_outline").value){ options[i].text = inputObj.value;}
 }
 }
 document.getElementById("tree_container").className="tree_normal";}
@@ -260,7 +260,7 @@ this.helpObj.innerHTML = obj2.innerHTML;}
 , initTree : function()
 { JSTreeObj = this; JSTreeObj.createDropIndicator(); document.documentElement.onselectstart = JSTreeObj.cancelSelectionEvent; document.documentElement.ondragstart = JSTreeObj.cancelEvent; this.helpObj = document.createElement("DIV"); this.helpObj.style.display = "none"; document.body.appendChild(this.helpObj); if(this.iconsAllowed || this.addAllowed || this.deleteAllowed || this.renameAllowed){ try{ var menuModel = new DHTMLGoodies_menuModel(); if(this.addAllowed)menuModel.addItem(1,"Add Child",DRUPAL_OD_PATH + "/images/add.png","",false,"JSTreeObj.addItem"); menuModel.addItem(2,"Edit",DRUPAL_OD_PATH + "/images/edit.png","",false,"JSTreeObj.nodeContent"); if(this.renameAllowed)menuModel.addItem(3,"Rename",DRUPAL_OD_PATH + "/images/rename.png","",false,"JSTreeObj.renameItem"); if(ALLOW_DUPLICATE == 1){ menuModel.addItem(4,"Duplicate",DRUPAL_OD_PATH + "/images/duplicate.png","",false,"JSTreeObj.duplicateTree");}
 if(this.deleteAllowed)menuModel.addItem(5,"Delete",DRUPAL_OD_PATH + "/images/delete.png","",false,"JSTreeObj.deleteItem"); menuModel.init(); var menuModelNotAddOnly = new DHTMLGoodies_menuModel(); menuModelNotAddOnly.addItem(6,"Edit",DRUPAL_OD_PATH + "/images/edit.png","",false,"JSTreeObj.nodeContent"); if(this.deleteAllowed)menuModelNotAddOnly.addItem(7,"Delete",DRUPAL_OD_PATH + "/images/delete.png","",false,"JSTreeObj.deleteItem"); if(this.renameAllowed)menuModelNotAddOnly.addItem(8,"Rename",DRUPAL_OD_PATH + "/images/rename.png","",false,"JSTreeObj.renameItem"); menuModelNotAddOnly.init(); var menuModelRenameOnly = new DHTMLGoodies_menuModel(); if(this.renameAllowed)menuModelRenameOnly.addItem(9,"Rename",DRUPAL_OD_PATH + "/images/rename.png","",false,"JSTreeObj.renameItem"); menuModelRenameOnly.init(); var menuModelDeleteOnly = new DHTMLGoodies_menuModel(); if(this.deleteAllowed)menuModelDeleteOnly.addItem(10,"Delete",DRUPAL_OD_PATH + "/images/delete.png","",false,"JSTreeObj.deleteItem"); menuModelDeleteOnly.init(); var menuModelAddOnly = new DHTMLGoodies_menuModel(); if(this.addAllowed)menuModelAddOnly.addItem(11,"Add Child",DRUPAL_OD_PATH + "/images/add.png","",false,"JSTreeObj.addItem"); if(ALLOW_DUPLICATE == 1){ menuModelAddOnly.addItem(4,"Duplicate",DRUPAL_OD_PATH + "/images/duplicate.png","",false,"JSTreeObj.duplicateTree");}
-menuModelAddOnly.init(); var menuModelRoot = new DHTMLGoodies_menuModel(); if(this.addAllowed)menuModelRoot.addItem(12,"Add Child",DRUPAL_OD_PATH + "/images/add.png","",false,"JSTreeObj.addItem"); if(this.renameAllowed)menuModelRoot.addItem(13,"Rename",DRUPAL_OD_PATH + "/images/rename.png","",false,"JSTreeObj.renameItem"); menuModelRoot.init(); var menuModelIcons = new DHTMLGoodies_menuModel(); $.ajax({ type: "POST", url: AJAX_URL, data: "action=get_icons", success: function(msg){ var ary = Array(); if(msg != ''){ ary = PHP_Unserialize(msg); for(var i=0; i<ary.length; i++){ menuModelIcons.addItem(14+i,ary[i][0],DRUPAL_PATH + '/' + ary[i][1],"",false,"JSTreeObj.changeItemType");}
+menuModelAddOnly.init(); var menuModelRoot = new DHTMLGoodies_menuModel(); if(this.addAllowed)menuModelRoot.addItem(12,"Add Child",DRUPAL_OD_PATH + "/images/add.png","",false,"JSTreeObj.addItem"); if(this.renameAllowed)menuModelRoot.addItem(13,"Rename",DRUPAL_OD_PATH + "/images/rename.png","",false,"JSTreeObj.renameItem"); menuModelRoot.init(); var menuModelIcons = new DHTMLGoodies_menuModel(); $.ajax({ type: "POST", url: AJAX_URL + "get_icons", success: function(msg){ var ary = Array(); if(msg != ''){ ary = PHP_Unserialize(msg); for(var i=0; i<ary.length; i++){ menuModelIcons.addItem(14+i,ary[i][0],DRUPAL_PATH + '/' + ary[i][1],"",false,"JSTreeObj.changeItemType");}
 menuModelIcons.init();}
 }
 }); window.refToDragDropTree = this; this.contextMenu = new DHTMLGoodies_contextMenu(); this.contextMenu.setWidth(140); referenceToDHTMLSuiteContextMenu = this.contextMenu;}catch(e){ }
@@ -279,7 +279,7 @@ initExpandedNodes = this.Get_Cookie('dhtmlgoodies_expandedNodes'); if(initExpand
 }
 document.documentElement.onmousemove = JSTreeObj.moveDragableNodes; document.documentElement.onmouseup = JSTreeObj.dropDragableNodes;}
 }
-$(document).ready(function(){ treeObj = new JSDragDropTree(); treeObj.setTreeId("node0"); treeObj.setMaximumDepth(100); treeObj.initTree(); get_book_roots(); load_outline(document.getElementById("selected_outline").value);}); function load_outline(nid){ document.getElementById("node0").getElementsByTagName("UL")[0].innerHTML=""; if(nid !=0){ $.ajax({ type: "POST", url: AJAX_URL, data: "action=load_tree&nid=" + nid, success: function(msg){ var ary = Array(); ary = PHP_Unserialize(msg); for(var i=0; i<ary.length; i++){ ary_nid = ary[i][0]; ary_pid = ary[i][1]; ary_title = ary[i][2]; ary_edit = ary[i][4]; nodename = "node" + ary_nid; var li = document.createElement("LI"); li.id = nodename; var span = document.createElement("SPAN"); span.id = "nodeLevel" + ary_nid; span.innerHTML = "&nbsp;"; var a = document.createElement("A"); a.href = "#"; a.innerHTML = ary_title; var ul = document.createElement("UL"); li.appendChild(span); li.appendChild(a); li.appendChild(ul); parentid = "node" + ary_pid; document.getElementById("node0").getElementsByTagName("UL")[0].appendChild(li); if(OUTLINE_POSTS == 1){ document.getElementById(nodename).setAttribute("noadd","false");}else{ document.getElementById(nodename).setAttribute("noadd","true");}
+$(document).ready(function(){ treeObj = new JSDragDropTree(); treeObj.setTreeId("node0"); treeObj.setMaximumDepth(100); treeObj.initTree(); get_book_roots(); load_outline(document.getElementById("selected_outline").value);}); function load_outline(nid){ document.getElementById("node0").getElementsByTagName("UL")[0].innerHTML=""; if(nid !=0){ $.ajax({ type: "GET", url: AJAX_URL + "load_tree/" + nid, success: function(msg){ var ary = Array(); ary = PHP_Unserialize(msg); for(var i=0; i<ary.length; i++){ ary_nid = ary[i][0]; ary_pid = ary[i][1]; ary_title = ary[i][2]; ary_edit = ary[i][4]; nodename = "node" + ary_nid; var li = document.createElement("LI"); li.id = nodename; var span = document.createElement("SPAN"); span.id = "nodeLevel" + ary_nid; span.innerHTML = "&nbsp;"; var a = document.createElement("A"); a.href = "#"; a.innerHTML = ary_title; var ul = document.createElement("UL"); li.appendChild(span); li.appendChild(a); li.appendChild(ul); parentid = "node" + ary_pid; document.getElementById("node0").getElementsByTagName("UL")[0].appendChild(li); if(OUTLINE_POSTS == 1){ document.getElementById(nodename).setAttribute("noadd","false");}else{ document.getElementById(nodename).setAttribute("noadd","true");}
 if(ary_edit == 1){ document.getElementById(nodename).setAttribute("norename","false"); document.getElementById(nodename).setAttribute("nodelete","false");}else{ document.getElementById(nodename).setAttribute("norename","true"); document.getElementById(nodename).setAttribute("nodelete","true");}
 if(parentid == "node0"){ document.getElementById(nodename).setAttribute("nodelete","true"); document.getElementById(nodename).setAttribute("noDrag","true"); document.getElementById(nodename).setAttribute("noSiblings","true");}else{ if(DRAG_AND_DROP_CONTENT == 0){ document.getElementById(nodename).setAttribute("noDrag","true");}
 }
@@ -292,25 +292,25 @@ treeObj.expandAll(); var options = document.getElementById("selected_outline").o
 }
 });}
 }
-function duplicate_structure(){ var root = document.getElementById("selected_outline").value; if(root != 0 && confirm("Duplicate this outline? (this may take awhile)")){ $.ajax({ type: "POST", url: AJAX_URL, data: "action=duplicate_nodes&root=" + root, success: function(msg){ get_book_roots(); load_outline(msg); $(document).ready(function(){ $("#selected_outline").val(root);});}
+function duplicate_structure(){ var root = document.getElementById("selected_outline").value; if(root != 0 && confirm("Duplicate this outline? (this may take awhile)")){ $.ajax({ type: "POST", url: AJAX_URL + "duplicate_nodes/" + root, success: function(msg){ get_book_roots(); load_outline(msg); $(document).ready(function(){ $("#selected_outline").val(root);});}
 });}
 }
-function new_structure(){ var title = prompt("What is the name of this outline structure?"); if(title != ""){ $.ajax({ type: "POST", url: AJAX_URL, data: "action=add_node&parent=0&title=" + title, success: function(msg){ get_book_roots(); var ary = PHP_Unserialize(msg); load_outline(ary[0]);}
+function new_structure(){ var title = prompt("What is the name of this outline structure?"); if(title != ""){ $.ajax({ type: "POST", url: AJAX_URL + "add_node/0/" + title, success: function(msg){ get_book_roots(); var ary = PHP_Unserialize(msg); load_outline(ary[0]);}
 });}
 }
-function node_popup(nid){ mywindow = window.open(DRUPAL_PATH + "/node/" + nid + "/edit","mywindow","status=1,resizable=1,scrollbars=1,width=700,height=500"); mywindow.moveTo(300,200);}
+function node_popup(nid){ mywindow = window.open(DRUPAL_PATH + "/?q=node/" + nid + "/edit","mywindow","status=1,resizable=1,scrollbars=1,width=700,height=500"); mywindow.moveTo(300,200);}
 function save_tree(){ update_weights(); treeObj.initTree(); var saveString = treeObj.getNodeOrders(); var stringarray = saveString.split(","); savelist = Array(); for(i=0; i<stringarray.length; i++){ ids = stringarray[i].split("-"); savelist.push(Array(ids[0],ids[1],document.getElementById("nodeATag" + ids[0]).innerHTML));}
-document.getElementById("tree_container").className="tree_saving"; $.ajax({ type: "POST", url: AJAX_URL, data: "action=save_tree&tree=" + serialize(savelist), success: function(msg){ document.getElementById("tree_container").className="tree_normal"; if(msg){ var ary = Array(); ary = PHP_Unserialize(msg); nodename = "node" + ary[0]; document.getElementById("iconIMGnode" + ary[0]).src = DRUPAL_PATH + '/' + ary[1]; treeObj.initTree();}
+document.getElementById("tree_container").className="tree_saving"; $.ajax({ type: "POST", url: AJAX_URL + "save_tree/" + serialize(savelist), success: function(msg){ document.getElementById("tree_container").className="tree_normal"; if(msg){ var ary = Array(); ary = PHP_Unserialize(msg); nodename = "node" + ary[0]; document.getElementById("iconIMGnode" + ary[0]).src = DRUPAL_PATH + '/' + ary[1]; treeObj.initTree();}
 }
 });}
 function delete_structure(){ if(document.getElementById("selected_outline").value != 0){ var obj = document.getElementById("node" + document.getElementById("selected_outline").value); document.getElementById("tree_container").className="tree_saving"; var del = Array(); var answer = true; del.push(obj.id.substring(4)); var lis = obj.getElementsByTagName("LI"); for(var no=0;no<lis.length;no++){ del.push(lis[no].id.substring(4));}
-answer = confirm("Delete this entire outline? (This can not be undone!)"); if(answer){ $.ajax({ type: "POST", url: AJAX_URL, data: "action=delete&ids=" + serialize(del), success: function(msg){ var parentRef = obj.parentNode.parentNode; obj.parentNode.removeChild(obj); document.getElementById("tree_container").className="tree_normal"; get_book_roots(); document.getElementById("selected_outline").childNodes[0].selected = true;}
+answer = confirm("Delete this entire outline? (This can not be undone!)"); if(answer){ $.ajax({ type: "POST", url: AJAX_URL + "delete/" + serialize(del), success: function(msg){ var parentRef = obj.parentNode.parentNode; obj.parentNode.removeChild(obj); document.getElementById("tree_container").className="tree_normal"; get_book_roots(); document.getElementById("selected_outline").childNodes[0].selected = true;}
 });}else{ document.getElementById("tree_container").className="tree_normal";}
 }
 }
 function load_node(nid){ nid = nid.substring(4); node_popup(nid);}
-function load_view_node(nid){ nid = nid.substring(4); mywindow = window.open(DRUPAL_PATH + "/node/" + nid,"mywindow","status=1,resizable=1,scrollbars=1,width=700,height=500"); mywindow.moveTo(300,200);}
-function get_book_roots(){ $.ajax({ type: "POST", url: AJAX_URL, data: "action=get_book_roots", success: function(msg){ var ary = Array(); ary = PHP_Unserialize(msg); values = "<option value='0' SELECTED></option>"; for(var i=0; i<ary.length; i++){ ary_nid = ary[i][0]; ary_title = ary[i][1]; values+= "<option value='" + ary_nid + "'>" + ary_title + "</option>";}
+function load_view_node(nid){ nid = nid.substring(4); mywindow = window.open(DRUPAL_PATH + "/?q=node/" + nid,"mywindow","status=1,resizable=1,scrollbars=1,width=700,height=500"); mywindow.moveTo(300,200);}
+function get_book_roots(){ $.ajax({ type: "POST", url: AJAX_URL + "get_book_roots", success: function(msg){ var ary = Array(); ary = PHP_Unserialize(msg); values = "<option value='0' SELECTED></option>"; for(var i=0; i<ary.length; i++){ ary_nid = ary[i][0]; ary_title = ary[i][1]; values+= "<option value='" + ary_nid + "'>" + ary_title + "</option>";}
 $("#selected_outline").empty(); $("#selected_outline").append(values); $("#selected_outline").val(0);}
 });}
 function update_weights(){ var weight = Array(); var numbering = Array(0,0,0,0,0,0,0,0,0,0); var level = 0; var previouslevel = 0; var etext = false; var term = Array(); var tree = document.getElementById("node0").getElementsByTagName("LI"); var root = document.getElementById("selected_outline").value; for(i=0; i<tree.length; i++){ idlevel = tree[i].id; previouslevel = level; level = 0; while(document.getElementById(idlevel).parentNode.parentNode.id != "node0"){ idlevel = document.getElementById(idlevel).parentNode.parentNode.id; level++;}
@@ -318,5 +318,5 @@ if(level != 0){ if(etext == false){ if(previouslevel == level){ numbering[level-
 }else{ numbering[level-1]++;}
 weight.push(Array(numbering[level-1]-16,tree[i].id.substring(4)));}else{ weight.push(Array(-15,tree[i].id.substring(4)));}
 }
-treeObj.initTree(); document.getElementById("tree_container").className="tree_saving"; $.ajax({ type: "POST", url: AJAX_URL, data: "action=update_weights&weight=" + serialize(weight), success: function(msg){ document.getElementById("tree_container").className="tree_normal";}
+treeObj.initTree(); document.getElementById("tree_container").className="tree_saving"; $.ajax({ type: "POST", url: AJAX_URL + "update_weights/" + serialize(weight), success: function(msg){ document.getElementById("tree_container").className="tree_normal";}
 });}
