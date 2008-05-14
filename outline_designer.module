@@ -206,10 +206,12 @@ function outline_designer_settings_submit($form_id, $form_values) {
         $icon = $form_values["outline_designer_" . $value['type'] . "_icon_link"];
         $base_path = base_path();
         //pull off the site name if it was included
-        if(strpos(' ' . $icon,$base_path ) != 0){
-          $pos = strpos($icon,$base_path) + strlen($base_path);
-          $icon = substr($icon,$pos);
-        }
+		if($base_path != '/' && $base_path != ''){
+			if(strpos(' ' . $icon,$base_path ) != 0){
+			  $pos = strpos($icon,$base_path) + strlen($base_path);
+			  $icon = substr($icon,$pos);
+			}
+		}
         //clean up the string incase those other two didn't do the trick
         $icon = substr($icon,strpos($icon,drupal_get_path('module','outline_designer')));
         $icon = substr($icon,strpos($icon,file_directory_path()));
