@@ -9,11 +9,12 @@
 #node0 span{ color:#000; font-weight:bold; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;}
 #node0 ul{ list-style-type: none !important;}
 .root_node ul{ display:block;}
-.dhtmlgoodies_tree,#floatingContainer{ margin:0px 0px 0px -10px; padding:0px;}
+.dhtmlgoodies_tree{ margin:0px 0px 0px -10px; padding:0px; font-size:12px; font-family:Arial, Helvetica, sans-serif; font-style:normal; font-variant:normal; font-size-adjust:none; font-weight:normal; line-height:normal; letter-spacing:normal;}
 .dhtmlgoodies_tree ul{ margin: 0px; padding:0px; display:none;}
-#floatingContainer ul{ margin-left:20px; padding-left:0px;}
+#floatingContainer{ margin:10px 0px 0px -20px; padding:0px; list-style-image:none; list-style-position:inside; list-style-type:none; font-size:12px; font-family:Arial, Helvetica, sans-serif; font-style:normal; font-variant:normal; font-size-adjust:none; font-weight:normal; line-height:normal; letter-spacing:normal;}
+#floatingContainer li{ background-image:none; margin:0px; padding:0px;}
 .dhtmlgoodies_tree li{ background:none; list-style-type:none; margin:0px 0px 0px 20px;}
-.dhtmlgoodies_tree li,#floatingContainer li{ vertical-align:middle;}
+.dhtmlgoodies_tree li{ vertical-align:middle;}
 .dhtmlgoodies_tree li a,#floatingContainer li a{ color:#000; font-weight:bold; text-decoration:none; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;}
 .dhtmlgoodies_tree li a.highlightedNodeItem{ color:#000; font-weight:bold; text-decoration:none; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px; list-style-type:none;}
 #dragDropIndicatorImage{ padding: 9px 0px 0px 0px;}

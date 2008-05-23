@@ -259,8 +259,19 @@ function _outline_designer_outline() {
      var ALLOW_DUPLICATE = ' . $duplicate . ';
      var treeObj;';
   drupal_add_js($js,'inline');
+  //this is the production version
   drupal_add_css($od_path . '/style.css');
+  //this is the debugging / developing version
+  //drupal_add_css($od_path . '/source files/od_style.css');
+  //this one is the production version
   drupal_add_js($od_path . '/scripts.js');
+  //these ones are for debugging / developing
+  //drupal_add_js($od_path . '/source files/serialize.js');
+  //drupal_add_js($od_path . '/source files/unserialize.js');
+  //drupal_add_js($od_path . '/source files/drag-drop-folder-tree.js');
+  //drupal_add_js($od_path . '/source files/context-menu.js');
+  //drupal_add_js($od_path . '/source files/functions.js');
+  
   $output = theme('outline_designer_top');
   if(user_access('create new books') == 1){
    	$output.= theme('outline_designer_options');
@@ -273,10 +284,15 @@ function _outline_designer_outline() {
 */
 function theme_outline_designer_bottom(){
   return '</div>
-    <br /><br />
-  <ul id="node0" class="dhtmlgoodies_tree">
-  <ul style="display:inline"></ul>
-  </ul>
+  <div style="padding:5px;">
+     <a href="#" onclick="treeObj.collapseAll();">Collapse all</a>&nbsp;&nbsp;
+      <a href="#" onclick="treeObj.expandAll();">Expand all</a>
+    </div>
+  <div>
+	  <ul id="node0" class="dhtmlgoodies_tree">
+	  <ul style="display:inline"></ul>
+	  </ul>
+  </div>
   </div>';
 }
 /**
@@ -285,19 +301,15 @@ function theme_outline_designer_bottom(){
 function theme_outline_designer_options(){
   return'<input type="button" onclick="new_structure();" value="New">&nbsp;&nbsp;&nbsp;
   <input type="button" onclick="duplicate_structure();" value="Duplicate">&nbsp;&nbsp;&nbsp;
-  <input type="button" onclick="delete_structure();" value="Delete">&nbsp;&nbsp;&nbsp;';
+  <input type="button" onclick="delete_structure();" value="Delete">';
 }
 /**
 *  Implementation of theme hook
 */
 function theme_outline_designer_top(){
- return '<div id="tree_container" style="width:100%;padding:10px;border:1px #000000 dotted;" class="tree_normal">
-    <div width="400px" style="width:400px;float:left;">
-      <input type="button" onclick="treeObj.collapseAll();" value="Collapse all">&nbsp;&nbsp;&nbsp;
-      <input type="button" onclick="treeObj.expandAll();" value="Expand all">
-    </div>
-    <div style="float:right;">
-    <select id="selected_outline" onchange="load_outline(this.value);"></select>';
+ return '<div id="tree_container" style="padding:10px;border:1px #000000 dotted;" class="tree_normal">
+ <div style="padding:5px;"><select id="selected_outline" onchange="load_outline(this.value);"></select></div>
+    <div style="padding:5px;">';
 }
 /**
 * This is a helper function for pulling all the data about a tree together to be rendered, recursively traversing the tree to get all the nodes, it is a helper function for the load_tree ajax function
@@ -345,6 +357,7 @@ function _outline_designer_recurse_duplicate_nodes($nid, $tree = array()) {
 * Implementation of the ajax menu hook
 */
 function _outline_designer_ajax() {
+global $user;
 //need to figure out which arg is which, should be 1,2,3
 $action = arg(2);
 $var1 = arg(3);
@@ -366,7 +379,7 @@ if(isset($action)){
         }else{
           //figure out if there are currently any children
           //if there aren't then just give the child the parent's properties
-          $result = db_query("SELECT type FROM {node} JOIN {book} ON book.vid = node.vid WHERE parent=%d ORDER BY weight DESC",$parent);
+          $result = db_query("SELECT n.type FROM {node} as n JOIN {book} as b ON b.vid = n.vid WHERE b.parent=%d ORDER BY weight DESC",$parent);
           $num_rows = db_num_rows($result);
           if($num_rows == 0){
             $parent_node = node_load($parent);
@@ -447,7 +460,7 @@ if(isset($action)){
 	  	$root = $var1;
         $tree = array();
         //pull the whole node tree but only get the nid's
-        $value = db_fetch_array(db_query("SELECT node.nid FROM {book} JOIN {node} ON node.vid=book.vid WHERE node.nid=%d",$root));
+        $value = db_fetch_array(db_query("SELECT n.nid FROM {book} as b JOIN {node} as n ON n.vid=b.vid WHERE n.nid=%d",$root));
         $tree[$value['nid']] = 0;
         $tree = _outline_designer_recurse_duplicate_nodes($root,$tree);
         //load each node in the node tree
@@ -494,7 +507,7 @@ if(isset($action)){
 	  //out: all the node roots
 	  case 'get_book_roots':
         $roots = array();
-        $result = db_query("SELECT node.nid,title FROM {node} JOIN {book} ON book.vid = node.vid WHERE parent=0 ORDER BY node.nid");
+        $result = db_query("SELECT n.nid,n.title FROM {node} as n JOIN {book} as b ON b.vid = n.vid WHERE parent=0 ORDER BY n.nid");
         while($value = db_fetch_array($result)){
           array_push($roots,array($value['nid'],$value['title']));
         }
@@ -507,7 +520,7 @@ if(isset($action)){
 	  	$nid = $var1;
         //pull everything
         $tree = array();
-        $value = db_fetch_array(db_query("SELECT node.uid,node.nid,parent,title,type FROM {book} JOIN {node} ON node.vid=book.vid WHERE node.nid=%d ORDER BY weight",$nid));
+        $value = db_fetch_array(db_query("SELECT n.uid,n.nid,b.parent,n.title,n.type FROM {book} as b JOIN {node} as n ON n.vid=b.vid WHERE n.nid=%d ORDER BY weight",$nid));
 		if($value['type'] == 'book'){
 			$term = 'pages';
 		}else{

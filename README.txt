@@ -26,7 +26,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 INSTALATION
 *Place the outline_designer directory in the correct modules folder as you would any other Drupal module
-*Activate the module and then goto the settings page to set up the few options that there are.  
+*Activate the module
+*Goto your_drupal_site/admin/settings/outline_designer and configure your content types to use 
 *Go to your_drupal_site/outline_designer to access the outline designer.  
 *There's also a permission that you can activate to give people access to the outline_designer page / functions.
 
@@ -49,26 +50,26 @@ All content types come with "edit [type] content", "create [type] content", and 
 
 COMPATABILITY
 Since this is a intense javascript application there are unfortunately several issues. If you can identify or fix any of these it would be GREATLY appreciated.
-http://unixpapa.com/js/mouse.html
 
 WINDOWS
 Firefox 2 - No known issues
-Firefox 3 (beta4) - No known issues
 Safari 3 - No known issues
-Flock 1.1 - No known issues
 Netscape 9 - No known issues
-
-IE 7 - No known issues (Minor CSS glitch)
+Flock 1.1 - No known issues
+SeaMonkey - No known issues
+Firefox 3RC - No known issues
+IE 7 - Minor CSS glitch
 
 Opera 9 - No support for context menu
+
 MAC
 Firefox 2 - No known issues
 Safari 3 - No known issues
 Netscape 9 - No known issues
 Flock 1.1 - No known issues
-
-Firefox 3 (beta4) - Context menu works on root but not subnodes
-Camino 1.5 - Context menu works on root but not subnodes
+SeaMonkey - No known issues
+Firefox 3RC - Context menu works but you need to perform a Ctrl-Click
+Camino 1.5 - Context menu works but you need to perform a Ctrl-Click
 
 Opera 9 - No support for context menu
 
