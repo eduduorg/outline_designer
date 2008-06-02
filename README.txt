@@ -24,13 +24,12 @@ You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-INSTALATION (2 Steps)
+INSTALATION
 *Place the outline_designer directory in the correct modules folder as you would any other Drupal module
-*Take the ajax.php file and move it to the root of your drupal installation /YOU_DRUPAL_SITE/ajax.php
-
-Activate the module and then goto the settings page to set up the few options that there are.  
-Then goto your_drupal_site/outline_designer to access the outline designer.  
-There's also a permission that you can activate to give people access to the outline_designer page.
+*Activate the module
+*Goto your_drupal_site/admin/settings/outline_designer and configure your content types to use 
+*Go to your_drupal_site/outline_designer to access the outline designer.  
+*There's also a permission that you can activate to give people access to the outline_designer page / functions.
 
 SO LETS TALK ABOUT PERSMISSIONS...
 
@@ -51,27 +50,28 @@ All content types come with "edit [type] content", "create [type] content", and 
 
 COMPATABILITY
 Since this is a intense javascript application there are unfortunately several issues. If you can identify or fix any of these it would be GREATLY appreciated.
-http://unixpapa.com/js/mouse.html
 
 WINDOWS
 Firefox 2 - No known issues
-Firefox 3 (beta4) - No known issues
 Safari 3 - No known issues
-Flock 1.1 - No known issues
 Netscape 9 - No known issues
+Flock 1.1 - No known issues
+SeaMonkey - No known issues
+Firefox 3 - No known issues
+IE 7 - Minor CSS glitch
 
-IE 7 - No known issues (Minor CSS glitch)
+Opera 9 - No known issues
 
-Opera 9 - No support for context menu
 MAC
 Firefox 2 - No known issues
 Safari 3 - No known issues
 Netscape 9 - No known issues
 Flock 1.1 - No known issues
+SeaMonkey - No known issues
+Firefox 3 - No known issues
+Camino 1.5 - No known issues
 
-Firefox 3 (beta4) - Context menu works on root but not subnodes
-Camino 1.5 - Context menu works on root but not subnodes
+Opera 9 - Minor CSS glitch
 
-Opera 9 - No support for context menu
 
-Linux - I Don't have access to a linux box so if anyone does testing on this and can create a compatability chart that'd be awesome!
+Linux - I don't know what all the linux compat. browsers are but I do have Ubuntu running now so I can test them

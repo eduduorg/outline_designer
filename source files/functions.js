@@ -1,3 +1,31 @@
+/************************************************************************************************************
+//ELMS: Outline Designer - Ajax book / general usability improvements for Drupal 5.x
+//Copyright (C) 2008  The Pennsylvania State University
+//
+//Bryan Ollendyke
+//bto108@psu.edu
+//
+//Keith D. Bailey
+//kdb163@psu.edu
+//
+//12 Borland
+//University Park, PA 16802
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+************************************************************************************************************/  
 //kick these off at the start so that we can have a tree object to make changes to
 $(document).ready(function(){
   treeObj = new JSDragDropTree();
@@ -6,16 +34,44 @@ $(document).ready(function(){
   treeObj.initTree();
   get_book_roots();
   load_outline(document.getElementById("selected_outline").value);
+  treeObj.createDropIndicator();
+  document.documentElement.onselectstart = treeObj.cancelSelectionEvent;
+  document.documentElement.ondragstart = treeObj.cancelEvent;
+  document.documentElement.onmousemove = treeObj.moveDragableNodes;  
+  document.documentElement.onmouseup = treeObj.dropDragableNodes;
+  treeObj.helpObj = document.createElement("DIV");
+  treeObj.helpObj.style.display = "none";
+  document.body.appendChild(treeObj.helpObj);
 });
+//scale the interface via jquery
+function scale_outline_designer(scale){
+	if(scale == 'up' && factor != 2.5){
+	factor = factor + .25;
+	}else if(scale == 'down' && factor != .5){
+		factor = factor - .25;
+	}else if(scale == 'reset'){
+		factor = 1;
+	}
+	if(factor == 1){
+		$("#node0 img").css('width','').css('height','');
+		$("#node0 a").css('font-size','');
+	}else{
+		$("#node0 img").css('width',factor + 'em').css('height',factor + 'em');
+		$("#node0 a").css('font-size',factor + 'em');
+	}
+	$("#node0 span").css('margin','0px ' + factor * 5 + 'px 0px ' + factor * 5 + 'px').css('padding','0px ' + factor * 5 + 'px ' + factor * 10 + 'px ' + factor * 5 + 'px');
+	$("#node0 span").css('background-image','url(' + DRUPAL_OD_PATH + '/images/settings' + (factor*100) + '.png)');
+	//take care of drop indicator if we've scaled the interface
+	$("#dragDropIndicatorImage").css('padding',factor * 9 + 'px 0px 0px 0px').css('width',factor + 'em').css('height',factor + 'em');
+}
 
 //This gets called once a structure is duplicated or a new one is added, it loads up everything visually with permissions taken into account
 function load_outline(nid){
   document.getElementById("node0").getElementsByTagName("UL")[0].innerHTML="";
   if(nid !=0){
   $.ajax({
-     type: "POST",
-     url: AJAX_URL,
-     data: "action=load_tree&nid=" + nid,
+     type: "GET",
+     url: AJAX_URL + "load_tree/" + nid,
      success: function(msg){
       var ary = Array();
       ary = PHP_Unserialize(msg);
@@ -29,13 +85,13 @@ function load_outline(nid){
         li.id = nodename;
         var span = document.createElement("SPAN");
         span.id = "nodeLevel" + ary_nid;
-        span.innerHTML = "&nbsp;";
         var a = document.createElement("A");
         a.href = "#";
         a.innerHTML = ary_title;
         var ul = document.createElement("UL");
+		
         li.appendChild(span);
-        li.appendChild(a);
+		li.appendChild(a);
         li.appendChild(ul);
         
         parentid = "node" + ary_pid;
@@ -93,13 +149,9 @@ function load_outline(nid){
       }
       treeObj.expandAll();
       //try to force a setting of the tree in the select box
-      var options = document.getElementById("selected_outline").options;
-      document.getElementById("selected_outline").value = nid;
-      for(i=0;i<options.length;i++){
-        if(options[i].value == nid){
-          options[i].selected = true;
-        }
-      }
+	  $(document).ready(function(){
+        $("#selected_outline").attr('value',nid);
+      });
      }
    });
   }
@@ -110,8 +162,7 @@ function duplicate_structure(){
   if(root != 0 && confirm("Duplicate this outline? (this may take awhile)")){
     $.ajax({
      type: "POST",
-     url: AJAX_URL,
-     data: "action=duplicate_nodes&root=" + root,
+     url: AJAX_URL + "duplicate_nodes/" + root,
      success: function(msg){
       //a new root has been made so we can just load it like any other
       //the return will be the node to load
@@ -128,11 +179,10 @@ function duplicate_structure(){
  //create a new book tree
  function new_structure(){
   var title = prompt("What is the name of this outline structure?");
-  if(title != ""){
+  if(title != "" && title != null){
     $.ajax({
      type: "POST",
-     url: AJAX_URL,
-     data: "action=add_node&parent=0&title=" + title,
+     url: AJAX_URL + "add_node/0/" + title,
      success: function(msg){
      //returned msg will be the nid of the new book so that we can start to render it out
       get_book_roots();
@@ -144,7 +194,7 @@ function duplicate_structure(){
  }
  //pop up helper for generating an edit form for a node
  function node_popup(nid){
-   mywindow = window.open(DRUPAL_PATH + "/node/" + nid + "/edit","mywindow","status=1,resizable=1,scrollbars=1,width=700,height=500");
+   mywindow = window.open(DRUPAL_PATH + "/?q=node/" + nid + "/edit","mywindow","status=1,resizable=1,scrollbars=1,width=700,height=500");
    mywindow.moveTo(300,200);
  }
  
@@ -162,8 +212,7 @@ function duplicate_structure(){
   document.getElementById("tree_container").className="tree_saving";
   $.ajax({
    type: "POST",
-   url: AJAX_URL,
-   data: "action=save_tree&tree=" + serialize(savelist),
+   url: AJAX_URL + "save_tree/" + serialize(savelist),
    success: function(msg){
   document.getElementById("tree_container").className="tree_normal";
   if(msg){
@@ -193,8 +242,7 @@ function duplicate_structure(){
     if(answer){
       $.ajax({
          type: "POST",
-         url: AJAX_URL,
-         data: "action=delete&ids=" + serialize(del),
+         url: AJAX_URL + "delete/" + serialize(del),
          success: function(msg){
            var parentRef = obj.parentNode.parentNode;
            obj.parentNode.removeChild(obj);
@@ -218,7 +266,7 @@ function load_node(nid){
 //pop up window for viewing a node. this gets called when you double click on any node
 function load_view_node(nid){
   nid = nid.substring(4);
-  mywindow = window.open(DRUPAL_PATH + "/node/" + nid,"mywindow","status=1,resizable=1,scrollbars=1,width=700,height=500");
+  mywindow = window.open(DRUPAL_PATH + "/?q=node/" + nid,"mywindow","status=1,resizable=1,scrollbars=1,width=700,height=500");
     mywindow.moveTo(300,200);
 }
 
@@ -227,8 +275,7 @@ function load_view_node(nid){
 function get_book_roots(){
   $.ajax({
      type: "POST",
-     url: AJAX_URL,
-     data: "action=get_book_roots",
+     url: AJAX_URL + "get_book_roots",
      success: function(msg){
       var ary = Array();
       ary = PHP_Unserialize(msg);
@@ -291,8 +338,7 @@ function update_weights(){
   //send off these values
   $.ajax({
   type: "POST",
-  url: AJAX_URL,
-  data: "action=update_weights&weight=" + serialize(weight),
+  url: AJAX_URL + "update_weights/" + serialize(weight),
   success: function(msg){
     document.getElementById("tree_container").className="tree_normal";
   }

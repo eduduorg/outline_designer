@@ -1,27 +1,31 @@
 /************************************************************************************************************
-Drag and drop folder tree
-Copyright (C) 2006  DTHMLGoodies.com, Alf Magne Kalleland
+//ELMS: Outline Designer - Ajax book / general usability improvements for Drupal 5.x
+//Copyright (C) 2008  The Pennsylvania State University
+//
+//Bryan Ollendyke
+//bto108@psu.edu
+//
+//Keith D. Bailey
+//kdb163@psu.edu
+//
+//12 Borland
+//University Park, PA 16802
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-
-Dhtmlgoodies.com., hereby disclaims all copyright interest in this script
-written by Alf Magne Kalleland.
-
-Alf Magne Kalleland, 2006
-Owner of DHTMLgoodies.com
-
+Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies.com, Alf Magne Kalleland
 ************************************************************************************************************/  
   
   var JSTreeObj;
@@ -53,7 +57,7 @@ Owner of DHTMLgoodies.com
     this.folderImage = 'node.png';
     this.plusImage = 'plus.gif';
     this.minusImage = 'minus.gif';
-    this.maximumDepth = 6;
+    this.maximumDepth = 100;
     var messageMaximumDepthReached;
     
     var renameAllowed;
@@ -286,12 +290,12 @@ Owner of DHTMLgoodies.com
     /* Initialize drag */
     initDrag : function(e)
     {
-      if(document.all)e = event;  
+      if(document.all)e = event;
       if (e.which == null){
           // IE
           button= (e.button < 2) ? "LEFT" :
             ((e.button == 4) ? "MIDDLE" : "RIGHT");
-        if(button == "LEFT"){
+        if(button == "LEFT" && e.target.tagName != "SPAN"){
           var subs = JSTreeObj.floatingContainer.getElementsByTagName('LI');
           if(subs.length>0){
             if(JSTreeObj.dragNode_sourceNextSib){
@@ -309,14 +313,14 @@ Owner of DHTMLgoodies.com
           JSTreeObj.dragNode_destination = false;
           JSTreeObj.dragDropTimer = 0;
           JSTreeObj.timerDrag();
-        }else if(button == "RIGHT"){
+        }else if(button == "LEFT" && e.target.tagName == "SPAN"){
           window.refToThisContextMenu.__setReference(window.refToThisContextMenu);
         }
       }else{
           // All others
            button= (e.which < 2) ? "LEFT" :
              ((e.which == 2) ? "MIDDLE" : "RIGHT");  
-        if(button == "LEFT"){
+        if(button == "LEFT" && e.target.tagName != "SPAN"){
           var subs = JSTreeObj.floatingContainer.getElementsByTagName('LI');
           if(subs.length>0){
             if(JSTreeObj.dragNode_sourceNextSib){
@@ -334,7 +338,7 @@ Owner of DHTMLgoodies.com
           JSTreeObj.dragNode_destination = false;
           JSTreeObj.dragDropTimer = 0;
           JSTreeObj.timerDrag();
-        }else if(button == "RIGHT"){
+        }else if(button == "LEFT" && e.target.tagName == "SPAN"){
           window.refToThisContextMenu.__setReference(window.refToThisContextMenu);
         }
       }
@@ -476,8 +480,7 @@ Owner of DHTMLgoodies.com
     //ajax here
     $.ajax({
        type: "POST",
-       url: AJAX_URL,
-       data: "action=drag_drop_update&parent=" + parent + "&nid=" + JSTreeObj.dragNode_source.id.substring(4),
+       url: AJAX_URL + "drag_drop_update/" + parent + "/" + JSTreeObj.dragNode_source.id.substring(4),
        success: function(msg){
          document.getElementById("tree_container").className="tree_normal";
          }
@@ -617,8 +620,7 @@ Owner of DHTMLgoodies.com
       //need to come up with some way of figuring out which new_type they clicked on
       $.ajax({
           type: "POST",
-          url: AJAX_URL,
-          data: "action=change_type&nid=" + nodenum + "&new_type=" + new_type,
+          url: AJAX_URL + "change_type/" + nodenum + "/" + new_type,
           success: function(msg){
             document.getElementById("iconIMGnode" + nodenum).src = DRUPAL_PATH + '/' + msg;
           }
@@ -633,8 +635,7 @@ Owner of DHTMLgoodies.com
       if(root != 0 && confirm("Duplicate this entire node structure?")){
         $.ajax({
          type: "POST",
-         url: AJAX_URL,
-         data: "action=duplicate_nodes&root=" + root,
+         url: AJAX_URL + "duplicate_nodes/" + root,
          success: function(msg){
              //a new root has been made so we can just load it like any other
           //the return will be the node to load
@@ -661,8 +662,7 @@ Owner of DHTMLgoodies.com
       }else{  
         $.ajax({
           type: "POST",
-          url: AJAX_URL,
-          data: "action=add_node&parent=" + nodenum + "&title=" + title,
+          url: AJAX_URL + "add_node/" + nodenum + "/" + title,
           success: function(msg){
             ary = PHP_Unserialize(msg);
             next_id = ary[0];
@@ -671,14 +671,15 @@ Owner of DHTMLgoodies.com
             li.id = nodename;
             var span = document.createElement('SPAN');
             span.id = 'nodeLevel' + next_id;
-            span.innerHTML = '&nbsp;&nbsp;';
             var a = document.createElement('A');
             a.href = '#';
             a.innerHTML = title;
             var ul = document.createElement('UL');
-            li.appendChild(span);
-            li.appendChild(a);
+			
+			li.appendChild(span);
+			li.appendChild(a);
             li.appendChild(ul);
+			
             parentid = 'node' + nodenum;
             //get the UL that is in the parentID that we are looking to insert this new LI into
             //this helps to account for errors caused by JS not changing the name fast enough
@@ -700,7 +701,6 @@ Owner of DHTMLgoodies.com
             }
             
             //set the double click stuff
-            document.getElementById(span.id).setAttribute('ondblclick','load_view_node(this.parentNode.id);');
             document.getElementById(li.id).getElementsByTagName("A")[0].setAttribute('ondblclick','load_view_node(this.parentNode.id);');
             
             obj1.parentNode.parentNode.style.visibility = 'hidden';
@@ -745,8 +745,7 @@ Owner of DHTMLgoodies.com
         document.getElementById("tree_container").className="tree_saving";
         $.ajax({
            type: "POST",
-           url: AJAX_URL,
-           data: "action=delete&ids=" + serialize(del),
+           url: AJAX_URL + "delete/" + serialize(del),
            success: function(msg){
              var parentRef = obj.parentNode.parentNode;
              obj.parentNode.removeChild(obj);
@@ -776,8 +775,7 @@ Owner of DHTMLgoodies.com
             document.getElementById("tree_container").className="tree_saving";
             $.ajax({
               type: "POST",
-              url: AJAX_URL,
-              data: "action=rename&nid=" + nid + "&newtitle=" + inputObj.value,
+              url: AJAX_URL + "rename/" + nid + "/" + inputObj.value,
               success: function(msg){
                 if(inputObj.parentNode.parentNode.parentNode.id == "node0"){
                   //try to force switching back to the same option even tho the title changed
@@ -855,15 +853,15 @@ Owner of DHTMLgoodies.com
     initTree : function()
     {
       JSTreeObj = this;
-      JSTreeObj.createDropIndicator();
-      document.documentElement.onselectstart = JSTreeObj.cancelSelectionEvent;
-      document.documentElement.ondragstart = JSTreeObj.cancelEvent;
+      //JSTreeObj.createDropIndicator();
+     // document.documentElement.onselectstart = JSTreeObj.cancelSelectionEvent;
+      //document.documentElement.ondragstart = JSTreeObj.cancelEvent;
       //document.documentElement.onmousedown = JSTreeObj.removeHighlight;
       
       /* Creating help object for storage of values */
-      this.helpObj = document.createElement("DIV");
-      this.helpObj.style.display = "none";
-      document.body.appendChild(this.helpObj);
+     // this.helpObj = document.createElement("DIV");
+     // this.helpObj.style.display = "none";
+    // document.body.appendChild(this.helpObj);
       /* Create context menu */
       if(this.iconsAllowed || this.addAllowed || this.deleteAllowed || this.renameAllowed){
         try{
@@ -877,49 +875,72 @@ Owner of DHTMLgoodies.com
             menuModel.addItem(4,"Duplicate",DRUPAL_OD_PATH + "/images/duplicate.png","",false,"JSTreeObj.duplicateTree");
           }
           if(this.deleteAllowed)menuModel.addItem(5,"Delete",DRUPAL_OD_PATH + "/images/delete.png","",false,"JSTreeObj.deleteItem");
-          menuModel.init();
+          //menuModel.init();
           var menuModelNotAddOnly = new DHTMLGoodies_menuModel();
           menuModelNotAddOnly.addItem(6,"Edit",DRUPAL_OD_PATH + "/images/edit.png","",false,"JSTreeObj.nodeContent");
           if(this.deleteAllowed)menuModelNotAddOnly.addItem(7,"Delete",DRUPAL_OD_PATH + "/images/delete.png","",false,"JSTreeObj.deleteItem");
           if(this.renameAllowed)menuModelNotAddOnly.addItem(8,"Rename",DRUPAL_OD_PATH + "/images/rename.png","",false,"JSTreeObj.renameItem");
-          menuModelNotAddOnly.init();
+          //menuModelNotAddOnly.init();
           
           var menuModelRenameOnly = new DHTMLGoodies_menuModel();
           if(this.renameAllowed)menuModelRenameOnly.addItem(9,"Rename",DRUPAL_OD_PATH + "/images/rename.png","",false,"JSTreeObj.renameItem");
-          menuModelRenameOnly.init();  
+          //menuModelRenameOnly.init();  
           
           var menuModelDeleteOnly = new DHTMLGoodies_menuModel();
           if(this.deleteAllowed)menuModelDeleteOnly.addItem(10,"Delete",DRUPAL_OD_PATH + "/images/delete.png","",false,"JSTreeObj.deleteItem");
-          menuModelDeleteOnly.init();
+          //menuModelDeleteOnly.init();
           
           var menuModelAddOnly = new DHTMLGoodies_menuModel();
           if(this.addAllowed)menuModelAddOnly.addItem(11,"Add Child",DRUPAL_OD_PATH + "/images/add.png","",false,"JSTreeObj.addItem");
           if(ALLOW_DUPLICATE == 1){
             menuModelAddOnly.addItem(4,"Duplicate",DRUPAL_OD_PATH + "/images/duplicate.png","",false,"JSTreeObj.duplicateTree");
           }
-          menuModelAddOnly.init();
+          //menuModelAddOnly.init();
           
           var menuModelRoot = new DHTMLGoodies_menuModel();
           if(this.addAllowed)menuModelRoot.addItem(12,"Add Child",DRUPAL_OD_PATH + "/images/add.png","",false,"JSTreeObj.addItem");
           if(this.renameAllowed)menuModelRoot.addItem(13,"Rename",DRUPAL_OD_PATH + "/images/rename.png","",false,"JSTreeObj.renameItem");          
-          menuModelRoot.init();
+          //menuModelRoot.init();
           
-          var menuModelIcons = new DHTMLGoodies_menuModel();
-          $.ajax({
-            type: "POST",
-            url: AJAX_URL,
-            data: "action=get_icons",
-            success: function(msg){
-              var ary = Array();
-              if(msg != ''){
-                ary = PHP_Unserialize(msg);
-                for(var i=0; i<ary.length; i++){
-                  menuModelIcons.addItem(14+i,ary[i][0],DRUPAL_PATH + '/' + ary[i][1],"",false,"JSTreeObj.changeItemType");
-                }
-                menuModelIcons.init();
-              }
-            }
-          });
+			if(CHANGE_CONTENT_TYPES){
+			  menuModel.addSeparator(0);
+			  menuModelNotAddOnly.addSeparator(0);
+			  menuModelRenameOnly.addSeparator(0);
+			  menuModelDeleteOnly.addSeparator(0);
+			  menuModelAddOnly.addSeparator(0);
+			  menuModelRoot.addSeparator(0);
+			  
+			  menuModel.addItem(14,"Change Type",'','',false);
+			  menuModelNotAddOnly.addItem(14,"Change Type",'','',false);
+			  menuModelRenameOnly.addItem(14,"Change Type",'','',false);
+			  menuModelDeleteOnly.addItem(14,"Change Type",'','',false);
+			  menuModelAddOnly.addItem(14,"Change Type",'','',false);
+			  menuModelRoot.addItem(14,"Change Type",'','',false);
+			  $.ajax({
+				type: "POST",
+				url: AJAX_URL + "get_icons",
+				success: function(msg){
+				  var ary = Array();
+				  if(msg != ''){
+					ary = PHP_Unserialize(msg);
+					for(var i=0; i<ary.length; i++){
+					 menuModel.addItem(15+i,ary[i][0],DRUPAL_PATH + '/' + ary[i][1],'',14,"JSTreeObj.changeItemType");
+					menuModelNotAddOnly.addItem(15+i,ary[i][0],DRUPAL_PATH + '/' + ary[i][1],'',14,"JSTreeObj.changeItemType");
+					menuModelRenameOnly.addItem(15+i,ary[i][0],DRUPAL_PATH + '/' + ary[i][1],'',14,"JSTreeObj.changeItemType");
+					menuModelDeleteOnly.addItem(15+i,ary[i][0],DRUPAL_PATH + '/' + ary[i][1],'',14,"JSTreeObj.changeItemType");
+					menuModelAddOnly.addItem(15+i,ary[i][0],DRUPAL_PATH + '/' + ary[i][1],'',14,"JSTreeObj.changeItemType");
+					menuModelRoot.addItem(15+i,ary[i][0],DRUPAL_PATH + '/' + ary[i][1],'',14,"JSTreeObj.changeItemType");
+					}
+				  }
+				}
+			  });
+			}
+			menuModel.init();
+			menuModelNotAddOnly.init();
+			menuModelRenameOnly.init();  
+			menuModelDeleteOnly.init();
+			menuModelAddOnly.init();
+			menuModelRoot.init();
           
           window.refToDragDropTree = this;
           
@@ -957,6 +978,7 @@ Owner of DHTMLgoodies.com
         if(!noDrag)aTag.onmousedown = JSTreeObj.initDrag;
         //if(!noChildren)aTag.onmousemove = JSTreeObj.moveDragableNodes;
         var spanTag = menuItems[no].getElementsByTagName('SPAN')[0];
+		var settingsIMG = menuItems[no].getElementsByTagName('IMG')[0];
         if(tagA == ''){
           menuItems[no].insertBefore(img,spanTag);
           if(!noDrag)spanTag.onmousedown = JSTreeObj.initDrag;
@@ -994,35 +1016,33 @@ Owner of DHTMLgoodies.com
           
           if(noRename=='true' && noDelete=='true' && noAdd=='true'){}else{
             if(noDelete == 'false' && noRename=='false' && noAdd=='true'){
-              this.contextMenu.attachToElement(aTag,false,menuModelNotAddOnly);
+              //this.contextMenu.attachToElement(aTag,false,menuModelNotAddOnly);
               this.contextMenu.attachToElement(spanTag,false,menuModelNotAddOnly);
               //this.contextMenu.attachToElement(iconIMG,false,menuModelNotAddOnly);
+			  //this.contextMenu.attachToElement(settingsIMG,false,menuModelNotAddOnly);
             }else if(noRename == 'false' && noAdd=='false' && noDelete == 'true'){
-              this.contextMenu.attachToElement(aTag,false,menuModelRoot);
+              //this.contextMenu.attachToElement(aTag,false,menuModelRoot);
               this.contextMenu.attachToElement(spanTag,false,menuModelRoot);
+			  //this.contextMenu.attachToElement(iconIMG,false,menuModelRoot);
+			  //this.contextMenu.attachToElement(settingsIMG,false,menuModelRoot);
             }else if(noDelete == 'true' && noAdd=='true'){
-              this.contextMenu.attachToElement(aTag,false,menuModelRenameOnly);
+              //this.contextMenu.attachToElement(aTag,false,menuModelRenameOnly);
               this.contextMenu.attachToElement(spanTag,false,menuModelRenameOnly);
               //this.contextMenu.attachToElement(iconIMG,false,menuModelRenameOnly);
             }else if(noRename == 'true' && noAdd=='true'){
-              this.contextMenu.attachToElement(aTag,false,menuModelDeleteOnly);
-              this.contextMenu.attachToElement(spanTag,false,menuModelDeleteOnly);
-              //this.contextMenu.attachToElement(iconIMG,false,menuModelDeleteOnly);
+             //this.contextMenu.attachToElement(aTag,false,menuModelDeleteOnly);
+             this.contextMenu.attachToElement(spanTag,false,menuModelDeleteOnly);
+             //this.contextMenu.attachToElement(iconIMG,false,menuModelDeleteOnly);
             }else if(noRename == 'true' && noDelete=='true'){
-              this.contextMenu.attachToElement(aTag,false,menuModelAddOnly);
-              this.contextMenu.attachToElement(spanTag,false,menuModelAddOnly);
-              //this.contextMenu.attachToElement(iconIMG,false,menuModelAddOnly);
+             //this.contextMenu.attachToElement(aTag,false,menuModelAddOnly);
+             this.contextMenu.attachToElement(spanTag,false,menuModelAddOnly);
+             //this.contextMenu.attachToElement(iconIMG,false,menuModelAddOnly);
             }else{ 
-              this.contextMenu.attachToElement(aTag,false,menuModel);
-              this.contextMenu.attachToElement(spanTag,false,menuModel);
-              //this.contextMenu.attachToElement(iconIMG,false,menuModelAddOnly);
+             //this.contextMenu.attachToElement(aTag,false,menuModel);
+             this.contextMenu.attachToElement(spanTag,false,menuModel);
+             //this.contextMenu.attachToElement(iconIMG,false,menuModel);
             }
           }
-          //add the icon menu to all nodes
-          this.contextMenu.attachToElement(iconIMG,false,menuModelIcons);
-          this.addEvent(aTag,'contextmenu',this.highlightItem);
-          this.addEvent(spanTag,'contextmenu',this.highlightItem);
-          this.addEvent(iconIMG,'contextmenu',this.highlightItem);
         }
         if(document.getElementById(menuItems[no].id).getElementsByTagName("LI").length==0){
           document.getElementById(menuItems[no].id).getElementsByTagName("IMG")[0].style.visibility="hidden";
@@ -1035,31 +1055,7 @@ Owner of DHTMLgoodies.com
           if(nodes[no])this.showHideNode(false,nodes[no]);  
         }      
       }
-      document.documentElement.onmousemove = JSTreeObj.moveDragableNodes;  
-      document.documentElement.onmouseup = JSTreeObj.dropDragableNodes;
+     // document.documentElement.onmousemove = JSTreeObj.moveDragableNodes;  
+    //  document.documentElement.onmouseup = JSTreeObj.dropDragableNodes;
     }    
   }
-//helper function to try and glue code together the drag and drop and context menu functionality because of right and left click registering as the same onmousedown event
-/*function(){
-  //if(document.all)e = event;
-  JSTreeObj.initDrag;
-  if (e.which == null){
-     // IE
-     button= (e.button < 2) ? "LEFT" :
-           ((e.button == 4) ? "MIDDLE" : "RIGHT");
-    if(button == "LEFT"){
-      JSTreeObj.initDrag;
-    }else if(button == "RIGHT"){
-      window.refToThisContextMenu.__setReference(window.refToThisContextMenu);
-    }
-  }else{
-     // All others
-     button= (e.which < 2) ? "LEFT" :
-         ((e.which == 2) ? "MIDDLE" : "RIGHT");  
-    if(button == "LEFT"){
-      JSTreeObj.initDrag;
-    }else if(button == "RIGHT"){
-      window.refToThisContextMenu.__setReference(window.refToThisContextMenu);
-    }
-  }
-}*/

@@ -1,28 +1,31 @@
 /************************************************************************************************************
-Context menu
-Copyright (C) 2006  DTHMLGoodies.com, Alf Magne Kalleland
+//ELMS: Outline Designer - Ajax book / general usability improvements for Drupal 5.x
+//Copyright (C) 2008  The Pennsylvania State University
+//
+//Bryan Ollendyke
+//bto108@psu.edu
+//
+//Keith D. Bailey
+//kdb163@psu.edu
+//
+//12 Borland
+//University Park, PA 16802
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-
-Dhtmlgoodies.com., hereby disclaims all copyright interest in this script
-written by Alf Magne Kalleland.
-
-Alf Magne Kalleland, 2006
-Owner of DHTMLgoodies.com
-
-
+Built off the Context menu Library Copyright (C) 2006  DTHMLGoodies.com, Alf Magne Kalleland
 ************************************************************************************************************/  
 
 DHTMLGoodies_menuModel = function()
@@ -134,7 +137,7 @@ DHTMLGoodies_menuModel.prototype = {
      * @private  
      */  
     __getDepths : function()
-    {      
+    {
       for(var no in this.menuItems){
         this.menuItems[no]['depth'] = 1;
         if(this.menuItems[no]['parentId']){
@@ -231,7 +234,7 @@ DHTMLGoodies_contextMenu.prototype =
       element.id = element.id.replace('.','');
     }
     this.menuModels[element.id] = menuModel;
-    element.oncontextmenu = this.__displayContextMenu;
+    element.onmousedown = this.__displayContextMenu;
     //this now gets handled in the drag and drop app because of a glitch where these two work against each other with mouse clicks
     //element.onmousedown = mouse_helper;//function() { window.refToThisContextMenu.__setReference(window.refToThisContextMenu); };
     document.documentElement.onclick = this.__hideContextMenu;
@@ -265,16 +268,16 @@ DHTMLGoodies_contextMenu.prototype =
     var ref = referenceToDHTMLSuiteContextMenu;
     ref.srcElement = ref.getSrcElement(e);
     
-    if(!ref.indexCurrentlyDisplayedMenuModel || ref.indexCurrentlyDisplayedMenuModel!=this.id){    
-        
-      if(ref.indexCurrentlyDisplayedMenuModel){
-        ref.menuObject.innerHTML = '';        
-      }else{
+   // if(!ref.indexCurrentlyDisplayedMenuModel || ref.indexCurrentlyDisplayedMenuModel!=this.id){    
+        $("#" + ref.menuObject.id).remove();
+     // if(ref.indexCurrentlyDisplayedMenuModel){
+    //    ref.menuObject.innerHTML = '';
+     // }else{
         ref.__createDivs();
-      }
+    //  }
       ref.menuItems = ref.menuModels[this.id].getItems();      
       ref.__createMenuItems();  
-    }
+   // }
     ref.indexCurrentlyDisplayedMenuModel=this.id;
     
     ref.menuObject.style.left = (e.clientX + Math.max(document.body.scrollLeft,document.documentElement.scrollLeft)) + 'px';
@@ -296,7 +299,7 @@ DHTMLGoodies_contextMenu.prototype =
   __hideContextMenu : function()
   {
     var ref = referenceToDHTMLSuiteContextMenu;
-    if(ref.menuObject)ref.menuObject.style.display = 'none';
+	if(ref.menuObject) $("#" + ref.menuObject.id).remove();//ref.menuObject.style.display = 'none';
     
     
   }
@@ -312,6 +315,7 @@ DHTMLGoodies_contextMenu.prototype =
   __createDivs : function()
   {
     this.menuObject = document.createElement('DIV');
+	this.menuObject.id = 'context_id';
     this.menuObject.className = 'DHTMLSuite_contextMenu';
     this.menuObject.style.backgroundImage = 'url(\'' + this.imagePath + 'context-menu-gradient.gif' + '\')';
     this.menuObject.style.backgroundRepeat = 'repeat-y';
@@ -330,6 +334,7 @@ DHTMLGoodies_contextMenu.prototype =
      */    
   __mouseOver : function()
   {
+	$("#" + this.id + " ul").css('display','block');
     this.className = 'DHTMLSuite_item_mouseover';  
     if(!document.all){
       this.style.backgroundPosition = 'left center';
@@ -347,6 +352,7 @@ DHTMLGoodies_contextMenu.prototype =
      */    
   __mouseOut : function()
   {
+	$("#" + this.id + " ul").css('display','none');
     this.className = '';
     if(!document.all){
       this.style.backgroundPosition = '1px center';
@@ -412,12 +418,43 @@ DHTMLGoodies_contextMenu.prototype =
 
           }
           li.style.margin = '0px';
+          li.innerHTML = '<a href="#" onclick="return false">' + this.menuItems[no]['itemText'] + '</a><ul style="display:none;"></ul>';
+          li.onmouseover = this.__mouseOver;
+          li.onmouseout = this.__mouseOut;
+		  li.id = 'context_menu_' + this.menuItems[no]['id'];
+        }        
+        this.menuUls[0].appendChild(li);      
+      }else{
+		 if(this.menuItems[no]['separator']){
+          var li = document.createElement('DIV');
+          li.className = 'DHTMLSuite_contextMenu_separator';
+        }else{
+          var li = document.createElement('LI');
+          if(this.menuItems[no]['jsFunction']){
+            this.menuItems[no]['url'] = this.menuItems[no]['jsFunction'] + '(this,referenceToDHTMLSuiteContextMenu.srcElement)';
+          }
+          if(this.menuItems[no]['itemIcon']){
+            li.style.backgroundImage = 'url(\'' + this.menuItems[no]['itemIcon'] + '\')';
+            if(!document.all)li.style.backgroundPosition = '1px center';
+
+          }
+          
+          if(this.menuItems[no]['url']){
+            var url = this.menuItems[no]['url'] + '';
+            var tmpUrl = url + '';
+            li.setAttribute('jsFunction',url);
+            li.jsFunction = url;
+            li.onclick = this.__evalUrl;
+
+          }
+          li.style.margin = '0px';
           li.innerHTML = '<a href="#" onclick="return false">' + this.menuItems[no]['itemText'] + '</a>';
           li.onmouseover = this.__mouseOver;
           li.onmouseout = this.__mouseOut;
-        }        
-        this.menuUls[0].appendChild(li);      
-      }    
+		  li.id = 'context_menu_' + this.menuItems[no]['id'];
+        }
+        $('#context_menu_' + this.menuItems[no]['parentId'] + ' ul').append(li);
+	  }
     }    
   }
 
