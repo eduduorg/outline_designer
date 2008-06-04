@@ -137,7 +137,7 @@ DHTMLGoodies_menuModel.prototype = {
      * @private  
      */  
     __getDepths : function()
-    {      
+    {
       for(var no in this.menuItems){
         this.menuItems[no]['depth'] = 1;
         if(this.menuItems[no]['parentId']){
@@ -234,7 +234,8 @@ DHTMLGoodies_contextMenu.prototype =
       element.id = element.id.replace('.','');
     }
     this.menuModels[element.id] = menuModel;
-    element.oncontextmenu = this.__displayContextMenu;
+	element.onmousedown = this.__displayContextMenu;
+    //element.ondblclick = this.__displayContextMenu;
     //this now gets handled in the drag and drop app because of a glitch where these two work against each other with mouse clicks
     //element.onmousedown = mouse_helper;//function() { window.refToThisContextMenu.__setReference(window.refToThisContextMenu); };
     document.documentElement.onclick = this.__hideContextMenu;
@@ -268,16 +269,16 @@ DHTMLGoodies_contextMenu.prototype =
     var ref = referenceToDHTMLSuiteContextMenu;
     ref.srcElement = ref.getSrcElement(e);
     
-    if(!ref.indexCurrentlyDisplayedMenuModel || ref.indexCurrentlyDisplayedMenuModel!=this.id){    
-        
-      if(ref.indexCurrentlyDisplayedMenuModel){
-        ref.menuObject.innerHTML = '';        
-      }else{
+   // if(!ref.indexCurrentlyDisplayedMenuModel || ref.indexCurrentlyDisplayedMenuModel!=this.id){    
+        $("#" + ref.menuObject.id).remove();
+     // if(ref.indexCurrentlyDisplayedMenuModel){
+    //    ref.menuObject.innerHTML = '';
+     // }else{
         ref.__createDivs();
-      }
+    //  }
       ref.menuItems = ref.menuModels[this.id].getItems();      
       ref.__createMenuItems();  
-    }
+   // }
     ref.indexCurrentlyDisplayedMenuModel=this.id;
     
     ref.menuObject.style.left = (e.clientX + Math.max(document.body.scrollLeft,document.documentElement.scrollLeft)) + 'px';
@@ -299,7 +300,7 @@ DHTMLGoodies_contextMenu.prototype =
   __hideContextMenu : function()
   {
     var ref = referenceToDHTMLSuiteContextMenu;
-    if(ref.menuObject)ref.menuObject.style.display = 'none';
+	if(ref.menuObject) $("#" + ref.menuObject.id).remove();//ref.menuObject.style.display = 'none';
     
     
   }
@@ -315,6 +316,7 @@ DHTMLGoodies_contextMenu.prototype =
   __createDivs : function()
   {
     this.menuObject = document.createElement('DIV');
+	this.menuObject.id = 'context_id';
     this.menuObject.className = 'DHTMLSuite_contextMenu';
     this.menuObject.style.backgroundImage = 'url(\'' + this.imagePath + 'context-menu-gradient.gif' + '\')';
     this.menuObject.style.backgroundRepeat = 'repeat-y';
@@ -333,6 +335,7 @@ DHTMLGoodies_contextMenu.prototype =
      */    
   __mouseOver : function()
   {
+	$("#" + this.id + " ul").css('display','block');
     this.className = 'DHTMLSuite_item_mouseover';  
     if(!document.all){
       this.style.backgroundPosition = 'left center';
@@ -350,6 +353,7 @@ DHTMLGoodies_contextMenu.prototype =
      */    
   __mouseOut : function()
   {
+	$("#" + this.id + " ul").css('display','none');
     this.className = '';
     if(!document.all){
       this.style.backgroundPosition = '1px center';
@@ -415,12 +419,43 @@ DHTMLGoodies_contextMenu.prototype =
 
           }
           li.style.margin = '0px';
+          li.innerHTML = '<a href="#" onclick="return false">' + this.menuItems[no]['itemText'] + '</a><ul style="display:none;"></ul>';
+          li.onmouseover = this.__mouseOver;
+          li.onmouseout = this.__mouseOut;
+		  li.id = 'context_menu_' + this.menuItems[no]['id'];
+        }        
+        this.menuUls[0].appendChild(li);      
+      }else{
+		 if(this.menuItems[no]['separator']){
+          var li = document.createElement('DIV');
+          li.className = 'DHTMLSuite_contextMenu_separator';
+        }else{
+          var li = document.createElement('LI');
+          if(this.menuItems[no]['jsFunction']){
+            this.menuItems[no]['url'] = this.menuItems[no]['jsFunction'] + '(this,referenceToDHTMLSuiteContextMenu.srcElement)';
+          }
+          if(this.menuItems[no]['itemIcon']){
+            li.style.backgroundImage = 'url(\'' + this.menuItems[no]['itemIcon'] + '\')';
+            if(!document.all)li.style.backgroundPosition = '1px center';
+
+          }
+          
+          if(this.menuItems[no]['url']){
+            var url = this.menuItems[no]['url'] + '';
+            var tmpUrl = url + '';
+            li.setAttribute('jsFunction',url);
+            li.jsFunction = url;
+            li.onclick = this.__evalUrl;
+
+          }
+          li.style.margin = '0px';
           li.innerHTML = '<a href="#" onclick="return false">' + this.menuItems[no]['itemText'] + '</a>';
           li.onmouseover = this.__mouseOver;
           li.onmouseout = this.__mouseOut;
-        }        
-        this.menuUls[0].appendChild(li);      
-      }    
+		  li.id = 'context_menu_' + this.menuItems[no]['id'];
+        }
+        $('#context_menu_' + this.menuItems[no]['parentId'] + ' ul').append(li);
+	  }
     }    
   }
 
