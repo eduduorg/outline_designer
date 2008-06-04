@@ -257,7 +257,8 @@ function _outline_designer_outline() {
      var CHANGE_CONTENT_TYPES = ' . $change_type . ';
      var OUTLINE_POSTS = ' . $outline_posts . ';
      var ALLOW_DUPLICATE = ' . $duplicate . ';
-     var treeObj;';
+     var treeObj;
+	 var factor = 1;';
   drupal_add_js($js,'inline');
   //this is the production version
   drupal_add_css($od_path . '/style.css');
@@ -272,7 +273,8 @@ function _outline_designer_outline() {
   //drupal_add_js($od_path . '/source files/context-menu.js');
   //drupal_add_js($od_path . '/source files/functions.js');
   
-  $output = theme('outline_designer_top');
+  $output = 'To drag nodes: Click and drag the type icon or the title<br />
+  			 To perform actions: Click on the smaller edit icon' . theme('outline_designer_top');
   if(user_access('create new books') == 1){
    	$output.= theme('outline_designer_options');
   }
@@ -286,7 +288,11 @@ function theme_outline_designer_bottom(){
   return '</div>
   <div style="padding:5px;">
      <a href="#" onclick="treeObj.collapseAll();">Collapse all</a>&nbsp;&nbsp;
-      <a href="#" onclick="treeObj.expandAll();">Expand all</a>
+      <a href="#" onclick="treeObj.expandAll();">Expand all</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	  Scale Interface: 
+	  <a href="#" onclick="scale_outline_designer(' . "'down'" . ');">Smaller</a>&nbsp;&nbsp;
+	  <a href="#" onclick="scale_outline_designer(' . "'up'" . ');">Bigger</a>&nbsp;&nbsp;
+	  <a href="#" onclick="scale_outline_designer(' . "'reset'" . ');">Reset</a>&nbsp;&nbsp;
     </div>
   <div>
 	  <ul id="node0" class="dhtmlgoodies_tree">
@@ -508,6 +514,8 @@ if(isset($action)){
 	  case 'get_book_roots':
         $roots = array();
         $result = db_query("SELECT n.nid,n.title FROM {node} as n JOIN {book} as b ON b.vid = n.vid WHERE parent=0 ORDER BY n.nid");
+		//if you comment this line back in it will allow you to move things between book roots
+		//array_push($roots,array(0,'{all}'));
         while($value = db_fetch_array($result)){
           array_push($roots,array($value['nid'],$value['title']));
         }
@@ -520,17 +528,25 @@ if(isset($action)){
 	  	$nid = $var1;
         //pull everything
         $tree = array();
-        $value = db_fetch_array(db_query("SELECT n.uid,n.nid,b.parent,n.title,n.type FROM {book} as b JOIN {node} as n ON n.vid=b.vid WHERE n.nid=%d ORDER BY weight",$nid));
-		if($value['type'] == 'book'){
-			$term = 'pages';
+		if($nid !=0){
+			$value = db_fetch_array(db_query("SELECT n.uid,n.nid,b.parent,n.title,n.type FROM {book} as b JOIN {node} as n ON n.vid=b.vid WHERE n.nid=%d ORDER BY weight",$nid));
+			if($value['type'] == 'book'){
+				$term = 'pages';
+			}else{
+				$term = 'content';
+			}
+			if(user_access('edit ' . $value['type'] . ' ' . $term)){
+				$allow_edit = 1;
+			}elseif($user->uid = $value['uid'] && user_access('edit own ' . $value['type'] . ' ' . $term)){
+				$allow_edit = 1;
+			}else{
+				$allow_edit = 0;
+			}
 		}else{
-			$term = 'content';
-		}
-		if(user_access('edit ' . $value['type'] . ' ' . $term)){
-			$allow_edit = 1;
-		}elseif($user->uid = $value['uid'] && user_access('edit own ' . $value['type'] . ' ' . $term)){
-			$allow_edit = 1;
-		}else{
+			$value['nid'] = 0;
+			$value['parent'] = 0;
+			$value['title'] = 'Root Node';
+			$value['type'] = 'book';
 			$allow_edit = 0;
 		}
         array_push($tree,array($value['nid'],$value['parent'],$value['title'],variable_get("outline_designer_" . $value['type'] . "_icon",drupal_get_path('module','outline_designer') . "/images/node.png"),$allow_edit));

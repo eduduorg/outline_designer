@@ -6,13 +6,14 @@
 .tree_normal{ filter:alpha(opacity=100); -moz-opacity:1.00; opacity:1.00;}
 .tree_saving{ filter:alpha(opacity=25); -moz-opacity:.25; opacity:.25;}
 .course_designer_box ul li{ list-style-type:none !important; list-style-image:none; margin:0px; padding:0px; cursor:pointer;}
-#node0 span{ color:#000; font-weight:bold; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;}
+#node0 span{ padding: 0px 5px 10px 5px; margin: 0px 5px 0px 5px; background-image: url(images/settings100.png); background-repeat:no-repeat; vertical-align:middle;}
 #node0 ul{ list-style-type: none !important;}
 .root_node ul{ display:block;}
 .dhtmlgoodies_tree{ margin:0px 0px 0px -10px; padding:0px; font-size:12px; font-family:Arial, Helvetica, sans-serif; font-style:normal; font-variant:normal; font-size-adjust:none; font-weight:normal; line-height:normal; letter-spacing:normal;}
 .dhtmlgoodies_tree ul{ margin: 0px; padding:0px; display:none;}
 #floatingContainer{ margin:10px 0px 0px -20px; padding:0px; list-style-image:none; list-style-position:inside; list-style-type:none; font-size:12px; font-family:Arial, Helvetica, sans-serif; font-style:normal; font-variant:normal; font-size-adjust:none; font-weight:normal; line-height:normal; letter-spacing:normal;}
-#floatingContainer li{ background-image:none; margin:0px; padding:0px;}
+#floatingContainer span{ padding: 0px 5px 10px 5px; margin: 0px 5px 0px 5px; background-image: url(images/settings100.png); background-repeat:no-repeat; vertical-align:middle;}
+#floatingContainer li{ background-image:none; margin:0px; padding:0px; list-style-image:none; list-style-position:inside; list-style-type:none;}
 .dhtmlgoodies_tree li{ background:none; list-style-type:none; margin:0px 0px 0px 20px;}
 .dhtmlgoodies_tree li{ vertical-align:middle;}
 .dhtmlgoodies_tree li a,#floatingContainer li a{ color:#000; font-weight:bold; text-decoration:none; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;}

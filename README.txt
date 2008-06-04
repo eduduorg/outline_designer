@@ -51,26 +51,13 @@ All content types come with "edit [type] content", "create [type] content", and 
 COMPATABILITY
 Since this is a intense javascript application there are unfortunately several issues. If you can identify or fix any of these it would be GREATLY appreciated.
 
-WINDOWS
 Firefox 2 - No known issues
-Safari 3 - No known issues
-Netscape 9 - No known issues
+Firefox 3 - No known issues
 Flock 1.1 - No known issues
-SeaMonkey - No known issues
-Firefox 3RC - No known issues
-IE 7 - Minor CSS glitch
-
-Opera 9 - No support for context menu
-
-MAC
-Firefox 2 - No known issues
 Safari 3 - No known issues
-Netscape 9 - No known issues
-Flock 1.1 - No known issues
+Camino 1.5 - No known issues
 SeaMonkey - No known issues
-Firefox 3RC - Context menu works but you need to perform a Ctrl-Click
-Camino 1.5 - Context menu works but you need to perform a Ctrl-Click
+Netscape 9 - No known issues
 
-Opera 9 - No support for context menu
-
-Linux - I Don't have access to a linux box so if anyone does testing on this and can create a compatability chart that'd be awesome!
+Opera 9 - Context Menu only stays open when you click and hold on the edit icon
+IE 7 - ??
