@@ -295,7 +295,7 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
           // IE
           button= (e.button < 2) ? "LEFT" :
             ((e.button == 4) ? "MIDDLE" : "RIGHT");
-        if(button == "LEFT" && e.target.tagName != "SPAN"){
+        if(button == "LEFT" && e.srcElement.tagName != "SPAN"){
           var subs = JSTreeObj.floatingContainer.getElementsByTagName('LI');
           if(subs.length>0){
             if(JSTreeObj.dragNode_sourceNextSib){
@@ -313,7 +313,7 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
           JSTreeObj.dragNode_destination = false;
           JSTreeObj.dragDropTimer = 0;
           JSTreeObj.timerDrag();
-        }else if(button == "LEFT" && e.target.tagName == "SPAN"){
+        }else if(button == "LEFT" && e.srcElement.tagName == "SPAN"){
           window.refToThisContextMenu.__setReference(window.refToThisContextMenu);
         }
       }else{
@@ -718,7 +718,7 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
             treeObj.initTree();
           },
           complete: function(ar1,ar2){
-            $("#iconIMGnode" + next_id).atr("src",DRUPAL_PATH + '/' + ary[2]);
+            $("#iconIMGnode" + next_id).attr("src",DRUPAL_PATH + '/' + ary[2]);
             //run the weights update
             update_weights();
           }

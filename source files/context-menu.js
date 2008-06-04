@@ -234,8 +234,11 @@ DHTMLGoodies_contextMenu.prototype =
       element.id = element.id.replace('.','');
     }
     this.menuModels[element.id] = menuModel;
-	element.onmousedown = this.__displayContextMenu;
-    //element.ondblclick = this.__displayContextMenu;
+	if(navigator.appName == 'Opera' || navigator.appName == 'Microsoft Internet Explorer'){
+		element.ondblclick = this.__displayContextMenu;
+	}else{
+    	element.onmousedown = this.__displayContextMenu;
+	}
     //this now gets handled in the drag and drop app because of a glitch where these two work against each other with mouse clicks
     //element.onmousedown = mouse_helper;//function() { window.refToThisContextMenu.__setReference(window.refToThisContextMenu); };
     document.documentElement.onclick = this.__hideContextMenu;

@@ -1,3 +1,26 @@
+function PHP_Unserialize(input)
+{ var result = PHP_Unserialize_(input); return result[0];}
+function PHP_Unserialize_(input)
+{ var length = 0; switch (input.charAt(0)) { case 'a':
+length = PHP_Unserialize_GetLength(input); input = input.substr(String(length).length + 4); var arr = new Array(); var key = null; var value = null; for (var i=0; i<length; ++i) { key = PHP_Unserialize_(input); input = key[1]; value = PHP_Unserialize_(input); input = value[1]; arr[key[0]] = value[0];}
+input = input.substr(1); return [arr, input]; break; case 'O':
+length = PHP_Unserialize_GetLength(input); var classname = String(input.substr(String(length).length + 4, length)); input = input.substr(String(length).length + 6 + length); var numProperties = Number(input.substring(0, input.indexOf(':')))
+input = input.substr(String(numProperties).length + 2); var obj = new Object(); var property = null; var value = null; for (var i=0; i<numProperties; ++i) { key = PHP_Unserialize_(input); input = key[1]; key[0] = key[0].replace(new RegExp('^\x00' + classname + '\x00'), ''); key[0] = key[0].replace(new RegExp('^\x00\\*\x00'), ''); value = PHP_Unserialize_(input); input = value[1]; obj[key[0]] = value[0];}
+input = input.substr(1); return [obj, input]; break; case 's':
+length = PHP_Unserialize_GetLength(input); return [String(input.substr(String(length).length + 4, length)), input.substr(String(length).length + 6 + length)]; break; case 'i':
+case 'd':
+var num = Number(input.substring(2, input.indexOf(';'))); return [num, input.substr(String(num).length + 3)]; break; case 'b':
+var bool = (input.substr(2, 1) == 1); return [bool, input.substr(4)]; break; case 'N':
+return [null, input.substr(2)]; break; case 'o':
+case 'r':
+case 'C':
+case 'R':
+case 'U':
+alert('Error: Unsupported PHP data type found!'); default:
+return [null, null]; break;}
+}
+function PHP_Unserialize_GetLength(input)
+{ input = input.substring(2); var length = Number(input.substr(0, input.indexOf(':'))); return length;}
 function JPSpan_Encode_PHP() { this.Serialize = new JPSpan_Serialize(this);}; JPSpan_Encode_PHP.prototype = { contentType: 'text/plain; charset=US-ASCII', encode: function(data) { return this.Serialize.serialize(data);}, encodeInteger: function(v) { return 'i:'+v+';';}, encodeDouble: function(v) { return 'd:'+v+';';}, encodeString: function(v) { var s = ''
 for(var n=0; n<v.length; n++) { var c=v.charCodeAt(n); if (c<128) { s += String.fromCharCode(c);}
 }
@@ -22,29 +45,6 @@ function JPSpan_Util_Data() { this.Serialize = new JPSpan_Serialize(this); this.
 }, encodeArray: function(v, Serializer) { var a=v; var indexed = new Array(); var out="Array("+a.length+")\n"; this.indent += "  "; if ( a.length>0 ) { for (var i=0; i < a.length; i++) { indexed[i] = true; out+=this.indent+"["+i+"]"; if ( (a[i]+'') == 'undefined') { out+= " = undefined\n"; continue;}; out+= " = "+Serializer.serialize(a[i])+"\n";};}; var assoc=''; for ( var prop in a ) { if ( indexed[prop] ) { continue;}; assoc+=this.indent+"[\""+prop+"\"]"; if ( (a[prop]+'') == 'undefined') { assoc+= " = undefined\n"; continue;}; assoc+= " = "+Serializer.serialize(a[prop])+"\n";}; if ( assoc.length > 0 ) { out += assoc;}; this.indent = this.indent.substr(0,this.indent.length-2); return out;}, encodeObject: function(v, Serializer, cname) { var o=v; if (o==null) return "Null\n"; var out="Object("+cname+")\n"; this.indent += "  "; for (var prop in o) { out+=this.indent+"."+prop+" = "; if (o[prop]==null) { out+="null\n"; continue;}; out+=Serializer.serialize(o[prop])+"\n";}; this.indent = this.indent.substr(0,this.indent.length-2); return out;}, encodeError: function(v, Serializer, cname) { var e = new Object(); if ( !v.name ) { e.name = cname; e.message = v.description;} else { e.name = v.name; e.message = v.message;}; return this.encodeObject(e,Serializer,cname);}
 }; function var_dump(data) { var Data = new JPSpan_Util_Data(); return Data.dump(data);}
 function serialize(data) { var Encoder = new JPSpan_Encode_PHP(); return Encoder.encode(data);}
-function PHP_Unserialize(input)
-{ var result = PHP_Unserialize_(input); return result[0];}
-function PHP_Unserialize_(input)
-{ var length = 0; switch (input.charAt(0)) { case 'a':
-length = PHP_Unserialize_GetLength(input); input = input.substr(String(length).length + 4); var arr = new Array(); var key = null; var value = null; for (var i=0; i<length; ++i) { key = PHP_Unserialize_(input); input = key[1]; value = PHP_Unserialize_(input); input = value[1]; arr[key[0]] = value[0];}
-input = input.substr(1); return [arr, input]; break; case 'O':
-length = PHP_Unserialize_GetLength(input); var classname = String(input.substr(String(length).length + 4, length)); input = input.substr(String(length).length + 6 + length); var numProperties = Number(input.substring(0, input.indexOf(':')))
-input = input.substr(String(numProperties).length + 2); var obj = new Object(); var property = null; var value = null; for (var i=0; i<numProperties; ++i) { key = PHP_Unserialize_(input); input = key[1]; key[0] = key[0].replace(new RegExp('^\x00' + classname + '\x00'), ''); key[0] = key[0].replace(new RegExp('^\x00\\*\x00'), ''); value = PHP_Unserialize_(input); input = value[1]; obj[key[0]] = value[0];}
-input = input.substr(1); return [obj, input]; break; case 's':
-length = PHP_Unserialize_GetLength(input); return [String(input.substr(String(length).length + 4, length)), input.substr(String(length).length + 6 + length)]; break; case 'i':
-case 'd':
-var num = Number(input.substring(2, input.indexOf(';'))); return [num, input.substr(String(num).length + 3)]; break; case 'b':
-var bool = (input.substr(2, 1) == 1); return [bool, input.substr(4)]; break; case 'N':
-return [null, input.substr(2)]; break; case 'o':
-case 'r':
-case 'C':
-case 'R':
-case 'U':
-alert('Error: Unsupported PHP data type found!'); default:
-return [null, null]; break;}
-}
-function PHP_Unserialize_GetLength(input)
-{ input = input.substring(2); var length = Number(input.substr(0, input.indexOf(':'))); return length;}
 DHTMLGoodies_menuModel = function()
 { var menuItems; this.menuItems = new Array();}
 DHTMLGoodies_menuModel.prototype = { addItem : function(id,itemText,itemIcon,url,parentId,jsFunction)
@@ -71,7 +71,8 @@ DHTMLGoodies_contextMenu.prototype = { setWidth : function(newWidth)
 { this.layoutCSS = cssFileName;}
 , attachToElement : function(element,elementId,menuModel)
 { window.refToThisContextMenu = this; if(!element && elementId)element = document.getElementById(elementId); if(!element.id){ element.id = 'context_menu' + Math.random(); element.id = element.id.replace('.','');}
-this.menuModels[element.id] = menuModel; element.onmousedown = this.__displayContextMenu; document.documentElement.onclick = this.__hideContextMenu;}
+this.menuModels[element.id] = menuModel; if(navigator.appName == 'Opera' || navigator.appName == 'Microsoft Internet Explorer'){ element.ondblclick = this.__displayContextMenu;}else{ element.onmousedown = this.__displayContextMenu;}
+document.documentElement.onclick = this.__hideContextMenu;}
 , __setReference : function(obj)
 { referenceToDHTMLSuiteContextMenu = obj;}
 , __displayContextMenu : function(e)
@@ -152,9 +153,9 @@ if(thisNode.style.visibility=='hidden')return; var parentNode = thisNode.parentN
 JSTreeObj.Set_Cookie('dhtmlgoodies_expandedNodes',initExpandedNodes,500); return false;}
 , initDrag : function(e)
 { if(document.all)e = event; if (e.which == null){ button= (e.button < 2) ? "LEFT" :
-((e.button == 4) ? "MIDDLE" : "RIGHT"); if(button == "LEFT" && e.target.tagName != "SPAN"){ var subs = JSTreeObj.floatingContainer.getElementsByTagName('LI'); if(subs.length>0){ if(JSTreeObj.dragNode_sourceNextSib){ JSTreeObj.dragNode_parent.insertBefore(JSTreeObj.dragNode_source,JSTreeObj.dragNode_sourceNextSib);}else{ JSTreeObj.dragNode_parent.appendChild(JSTreeObj.dragNode_source);}
+((e.button == 4) ? "MIDDLE" : "RIGHT"); if(button == "LEFT" && e.srcElement.tagName != "SPAN"){ var subs = JSTreeObj.floatingContainer.getElementsByTagName('LI'); if(subs.length>0){ if(JSTreeObj.dragNode_sourceNextSib){ JSTreeObj.dragNode_parent.insertBefore(JSTreeObj.dragNode_source,JSTreeObj.dragNode_sourceNextSib);}else{ JSTreeObj.dragNode_parent.appendChild(JSTreeObj.dragNode_source);}
 }
-JSTreeObj.dragNode_source = this.parentNode; JSTreeObj.dragNode_parent = this.parentNode.parentNode; JSTreeObj.dragNode_sourceNextSib = false; if(JSTreeObj.dragNode_source.nextSibling)JSTreeObj.dragNode_sourceNextSib = JSTreeObj.dragNode_source.nextSibling; JSTreeObj.dragNode_destination = false; JSTreeObj.dragDropTimer = 0; JSTreeObj.timerDrag();}else if(button == "LEFT" && e.target.tagName == "SPAN"){ window.refToThisContextMenu.__setReference(window.refToThisContextMenu);}
+JSTreeObj.dragNode_source = this.parentNode; JSTreeObj.dragNode_parent = this.parentNode.parentNode; JSTreeObj.dragNode_sourceNextSib = false; if(JSTreeObj.dragNode_source.nextSibling)JSTreeObj.dragNode_sourceNextSib = JSTreeObj.dragNode_source.nextSibling; JSTreeObj.dragNode_destination = false; JSTreeObj.dragDropTimer = 0; JSTreeObj.timerDrag();}else if(button == "LEFT" && e.srcElement.tagName == "SPAN"){ window.refToThisContextMenu.__setReference(window.refToThisContextMenu);}
 }else{ button= (e.which < 2) ? "LEFT" :
 ((e.which == 2) ? "MIDDLE" : "RIGHT"); if(button == "LEFT" && e.target.tagName != "SPAN"){ var subs = JSTreeObj.floatingContainer.getElementsByTagName('LI'); if(subs.length>0){ if(JSTreeObj.dragNode_sourceNextSib){ JSTreeObj.dragNode_parent.insertBefore(JSTreeObj.dragNode_source,JSTreeObj.dragNode_sourceNextSib);}else{ JSTreeObj.dragNode_parent.appendChild(JSTreeObj.dragNode_source);}
 }
@@ -225,7 +226,7 @@ var root = obj2.id.substring("4"); if(root != 0 && confirm("Duplicate this entir
 var nodenum = obj2.id.substring(8); $("#tree_container").addClass("tree_saving"); $("#tree_container").removeClass("tree_normal"); var title = prompt("Node Title:"); if(title == null || title == ''){ $("#tree_container").removeClass("tree_saving"); $("#tree_container").addClass("tree_normal");}else{ $.ajax({ type: "POST", url: AJAX_URL + "add_node/" + nodenum + "/" + title, success: function(msg){ ary = PHP_Unserialize(msg); next_id = ary[0]; nodename = 'node' + next_id; var li = document.createElement('LI'); li.id = nodename; var span = document.createElement('SPAN'); span.id = 'nodeLevel' + next_id; var a = document.createElement('A'); a.href = '#'; a.innerHTML = title; var ul = document.createElement('UL'); li.appendChild(span); li.appendChild(a); li.appendChild(ul); parentid = 'node' + nodenum; $("#" + parentid + " ul:first").append(li); if(OUTLINE_POSTS == 1){ $("#" + nodename).attr("noadd","false");}else{ $("#" + nodename).attr("noadd","true");}
 if(ary[3] == 1){ $("#" + nodename).attr("norename","false"); $("#" + nodename).attr("nodelete","false");}else{ $("#" + nodename).attr("norename","true"); $("#" + nodename).attr("nodelete","true");}
 if(DRAG_AND_DROP_CONTENT == 0){ $("#" + nodename).attr("noDrag","true");}
-$("#" + li.id + " a:first").dblclick(function(){load_view_node(this.parentNode.id);}); obj1.parentNode.parentNode.style.visibility = 'hidden'; var pimg = document.getElementById(parentid).getElementsByTagName("IMG")[0]; pimg.style.visibility="visible"; pimg.src = pimg.src.replace(JSTreeObj.plusImage,JSTreeObj.minusImage); $("#" + parentid + " ul:first").css("display","block"); $("#tree_container").removeClass("tree_saving"); $("#tree_container").addClass("tree_normal"); treeObj.initTree();}, complete: function(ar1,ar2){ $("#iconIMGnode" + next_id).atr("src",DRUPAL_PATH + '/' + ary[2]); update_weights();}
+$("#" + li.id + " a:first").dblclick(function(){load_view_node(this.parentNode.id);}); obj1.parentNode.parentNode.style.visibility = 'hidden'; var pimg = document.getElementById(parentid).getElementsByTagName("IMG")[0]; pimg.style.visibility="visible"; pimg.src = pimg.src.replace(JSTreeObj.plusImage,JSTreeObj.minusImage); $("#" + parentid + " ul:first").css("display","block"); $("#tree_container").removeClass("tree_saving"); $("#tree_container").addClass("tree_normal"); treeObj.initTree();}, complete: function(ar1,ar2){ $("#iconIMGnode" + next_id).attr("src",DRUPAL_PATH + '/' + ary[2]); update_weights();}
 });}
 }
 , __refreshDisplay : function(obj)

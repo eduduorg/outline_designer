@@ -274,7 +274,7 @@ function _outline_designer_outline() {
   //drupal_add_js($od_path . '/source files/functions.js');
   
   $output = 'To drag nodes: Click and drag the type icon or the title<br />
-  			 To perform actions: Click on the smaller edit icon' . theme('outline_designer_top');
+  			 To perform actions: Click on the smaller edit icon (double-click in Opera and IE)' . theme('outline_designer_top');
   if(user_access('create new books') == 1){
    	$output.= theme('outline_designer_options');
   }

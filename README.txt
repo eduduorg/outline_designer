@@ -58,6 +58,6 @@ Safari 3 - No known issues
 Camino 1.5 - No known issues
 SeaMonkey - No known issues
 Netscape 9 - No known issues
+Opera 9 - Need to double click for context menu; No known issues.
 
-Opera 9 - Context Menu only stays open when you click and hold on the edit icon
-IE 7 - ??
+IE 7 - Adding children won't refresh the display unless that level is already open or a new node, CSS glitch with floating drop areas is way off, Need to double click for context menu, edit icon doesn't display, much slower then other browsers.
