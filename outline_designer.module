@@ -537,7 +537,7 @@ if(isset($action)){
 			}
 			if(user_access('edit ' . $value['type'] . ' ' . $term)){
 				$allow_edit = 1;
-			}elseif($user->uid = $value['uid'] && user_access('edit own ' . $value['type'] . ' ' . $term)){
+			}elseif($user->uid == $value['uid'] && user_access('edit own ' . $value['type'] . ' ' . $term)){
 				$allow_edit = 1;
 			}else{
 				$allow_edit = 0;
