@@ -324,18 +324,13 @@ function _outline_designer_tree_recurse($nid, $tree = array()) {
   global $user;
   $result = db_query("SELECT n.uid,n.nid,parent,title,type FROM {book} as b JOIN {node} as n ON n.vid=b.vid WHERE b.parent=%d ORDER BY weight", $nid);
   while($value = db_fetch_array($result)){
-    if($value['type'] == 'book'){
-    $term = 'pages';
-  }else{
-    $term = 'content';
-  }
-   if(user_access('edit ' . $value['type'] . ' ' . $term)){
-    $allow_edit = 1;
-  }elseif($user->uid == $value['uid'] && user_access('edit own ' . $value['type'] . ' ' . $term)){
-    $allow_edit = 1;
-  }else{
-    $allow_edit = 0;
-  }
+    if(user_access(_outline_designer_get_pstr('edit',$value['type']))) {
+      $allow_edit = 1;
+    }elseif($user->uid == $value['uid'] && user_access(_outline_designer_get_pstr('edit own',$value['type']))){
+      $allow_edit = 1;
+    }else{
+      $allow_edit = 0;
+    }
     array_push($tree,array(
             $value['nid'],
             $value['parent'],
@@ -389,14 +384,14 @@ if(isset($action)){
           $num_rows = db_num_rows($result);
           if($num_rows == 0){
             $parent_node = node_load($parent);
-			if(user_access('create ' . $parent_node->type . ' content')){
-           		$node->type = $parent_node->type;
-			}else{
+			if(user_access(_outline_designer_get_pstr('create', $parent_node->type))){
+			  $node->type = $parent_node->type;
+			} else {
 				$node->type = variable_get("outline_designer_default_type", "page");
 			}
           }else{
             $value = db_fetch_array($result);
-			if(user_access('create ' . $value['type'] . ' content')){
+			if(user_access(_outline_designer_get_pstr('create', $value['type']))){
            		$node->type = $value['type'];
 			}else{
 				$node->type = variable_get("outline_designer_default_type", "page");
@@ -411,14 +406,10 @@ if(isset($action)){
 		if($node->type != 'book'){
         	db_query("INSERT INTO {book} (nid, vid, parent, weight) VALUES (%d, %d, %d, %d)", $node->nid, $node->vid, $parent, -15);
 		}
-		if($node->type == 'book'){
-			$term = 'pages';
-		}else{
-			$term = 'content';
-		}
-		if(user_access('edit ' . $node->type . ' ' . $term) || user_access('edit own ' . $node->type . ' ' . $term)){
+		if(user_access(_outline_designer_get_pstr('edit',$node->type)) ||
+		   user_access(_outline_designer_get_pstr('edit own',$node->type))) {
 			$allow_edit = 1;
-		}else{
+		} else {
 			$allow_edit = 0;
 		}
         print serialize(array($node->nid,$node->type,variable_get("outline_designer_" . $node->type . "_icon",drupal_get_path('module','outline_designer') . "/images/node.png"),$allow_edit));
@@ -501,8 +492,8 @@ if(isset($action)){
 			foreach($ary as $value){
 			  $name = db_result(db_query("SELECT name FROM {node_type} WHERE type='%s'",$value));
 			  //only allow users with the create "type" privlege perform this operation
-			  if(user_access("create $value content")){
-				array_push($ary2,array($name,variable_get("outline_designer_" . $value . "_icon",drupal_get_path('module','outline_designer') . "/images/node.png")));
+			  if(user_access(_outline_designer_get_pstr('create', $value))){
+				  array_push($ary2,array($name,variable_get("outline_designer_" . $value . "_icon",drupal_get_path('module','outline_designer') . "/images/node.png")));
 			  }
 			}
 			print serialize($ary2);
@@ -618,4 +609,32 @@ if(isset($action)){
     }
   }
 exit();
+}
+
+function _outline_designer_get_pstr($op, $type) {
+  $term = 'content';
+  
+  switch ($type) {
+    // Panels are a totally special case
+    case 'panel':
+      if ($op == 'create') {
+        return 'create panel-nodes';
+      }
+      elseif ($op == 'edit') {
+        return 'administer panel-nodes';
+      }
+      elseif ($op == 'edit own') {
+        return 'edit own panel-nodes';
+      }
+      break;
+   
+    case 'book':
+      $term = 'pages';
+      break;
+    
+    default:
+      break;
+  }
+      
+  return ($op . ' ' . $type . ' ' . $term);
 }
