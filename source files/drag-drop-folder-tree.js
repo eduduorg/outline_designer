@@ -75,7 +75,7 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
     this.floatingContainer.style.display='none';
     this.floatingContainer.id = 'floatingContainer';
     this.insertAsSub = false;
-    document.body.appendChild(this.floatingContainer);
+	$("body").append(this.floatingContainer);
     this.dragDropTimer = -1;
     this.dragNode_noSiblings = false;
     this.currentItemToEdit = false;
@@ -213,7 +213,7 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
     ,
     expandAll : function()
     {
-      var menuItems = document.getElementById(this.idOfTree).getElementsByTagName('LI');
+      var menuItems = $("#" + this.idOfTree + " li");
       for(var no=0;no<menuItems.length;no++){
         var subItems = menuItems[no].getElementsByTagName('UL');
         if(subItems.length>0 && subItems[0].style.display!='block'){
@@ -224,7 +224,7 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
     ,
     collapseAll : function()
     {
-      var menuItems = document.getElementById(this.idOfTree).getElementsByTagName('LI');
+      var menuItems = $("#" + this.idOfTree + " li");
       for(var no=0;no<menuItems.length;no++){
         var subItems = menuItems[no].getElementsByTagName('UL');
         if(subItems.length>0 && subItems[0].style.display=='block'){
@@ -295,7 +295,7 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
           // IE
           button= (e.button < 2) ? "LEFT" :
             ((e.button == 4) ? "MIDDLE" : "RIGHT");
-        if(button == "LEFT" && e.target.tagName != "SPAN"){
+        if(button == "LEFT" && e.srcElement.tagName != "SPAN"){
           var subs = JSTreeObj.floatingContainer.getElementsByTagName('LI');
           if(subs.length>0){
             if(JSTreeObj.dragNode_sourceNextSib){
@@ -313,7 +313,7 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
           JSTreeObj.dragNode_destination = false;
           JSTreeObj.dragDropTimer = 0;
           JSTreeObj.timerDrag();
-        }else if(button == "LEFT" && e.target.tagName == "SPAN"){
+        }else if(button == "LEFT" && e.srcElement.tagName == "SPAN"){
           window.refToThisContextMenu.__setReference(window.refToThisContextMenu);
         }
       }else{
@@ -476,13 +476,15 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
     //need to change this so that it only updates the weights of all of them AND this node's parent attribute
     update_weights();
     parent = document.getElementById(JSTreeObj.dragNode_source.id).parentNode.parentNode.id.substring(4);
-    document.getElementById("tree_container").className="tree_saving";
+    $("#tree_container").addClass("tree_saving");
+    $("#tree_container").removeClass("tree_normal");
     //ajax here
     $.ajax({
        type: "POST",
        url: AJAX_URL + "drag_drop_update/" + parent + "/" + JSTreeObj.dragNode_source.id.substring(4),
        success: function(msg){
-         document.getElementById("tree_container").className="tree_normal";
+         	$("#tree_container").removeClass("tree_saving");
+    		$("#tree_container").addClass("tree_normal");
          }
     });
     }
@@ -496,7 +498,7 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
       img.src = this.imageFolder + 'dragDrop_ind1.gif';
       img.id = 'dragDropIndicatorImage';
       this.dropTargetIndicator.appendChild(img);
-      document.body.appendChild(this.dropTargetIndicator);
+      $("body").append(this.dropTargetIndicator);
     }
     ,
     dragDropCountLevels : function(obj,direction,stopAtObject){
@@ -622,7 +624,7 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
           type: "POST",
           url: AJAX_URL + "change_type/" + nodenum + "/" + new_type,
           success: function(msg){
-            document.getElementById("iconIMGnode" + nodenum).src = DRUPAL_PATH + '/' + msg;
+            $("#iconIMGnode" + nodenum).attr('src',DRUPAL_PATH + '/' + msg);
           }
       });
     }
@@ -639,7 +641,7 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
          success: function(msg){
              //a new root has been made so we can just load it like any other
           //the return will be the node to load
-          load_outline(document.getElementById("selected_outline").value);
+          load_outline($("#selected_outline").val());
         }
         });
       }
@@ -655,10 +657,12 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
         obj1.parentNode.parentNode.style.visibility='hidden';
       }
       var nodenum = obj2.id.substring(8);
-      document.getElementById("tree_container").className="tree_saving";
+      $("#tree_container").addClass("tree_saving");
+  	  $("#tree_container").removeClass("tree_normal");
       var title = prompt("Node Title:");
-      if(title == null){
-        document.getElementById("tree_container").className="tree_normal";
+      if(title == null || title == ''){
+        $("#tree_container").removeClass("tree_saving");
+    	$("#tree_container").addClass("tree_normal");
       }else{  
         $.ajax({
           type: "POST",
@@ -683,36 +687,38 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
             parentid = 'node' + nodenum;
             //get the UL that is in the parentID that we are looking to insert this new LI into
             //this helps to account for errors caused by JS not changing the name fast enough
-            document.getElementById(parentid).getElementsByTagName("UL")[0].appendChild(li);
+            $("#" + parentid + " ul:first").append(li);
             if(OUTLINE_POSTS == 1){
-              document.getElementById(nodename).setAttribute("noadd","false");
+              $("#" + nodename).attr("noadd","false");
             }else{
-              document.getElementById(nodename).setAttribute("noadd","true");
+              $("#" + nodename).attr("noadd","true");
             }
             if(ary[3] == 1){
-              document.getElementById(nodename).setAttribute("norename","false");
-              document.getElementById(nodename).setAttribute("nodelete","false");
+              $("#" + nodename).attr("norename","false");
+              $("#" + nodename).attr("nodelete","false");
             }else{
-              document.getElementById(nodename).setAttribute("norename","true");
-              document.getElementById(nodename).setAttribute("nodelete","true");
+              $("#" + nodename).attr("norename","true");
+              $("#" + nodename).attr("nodelete","true");
             }
             if(DRAG_AND_DROP_CONTENT == 0){
-              document.getElementById(nodename).setAttribute("noDrag","true");
+              $("#" + nodename).attr("noDrag","true");
             }
             
             //set the double click stuff
-            document.getElementById(li.id).getElementsByTagName("A")[0].setAttribute('ondblclick','load_view_node(this.parentNode.id);');
+            $("#" + li.id + " a:first").dblclick(function(){load_view_node(this.parentNode.id);});
             
             obj1.parentNode.parentNode.style.visibility = 'hidden';
             //must display the +/- icon and show things below it since we added a child to that level
             var pimg = document.getElementById(parentid).getElementsByTagName("IMG")[0];
             pimg.style.visibility="visible";
             pimg.src = pimg.src.replace(JSTreeObj.plusImage,JSTreeObj.minusImage);
-            document.getElementById(parentid).getElementsByTagName("UL")[0].style.display="block";
+            $("#" + parentid + " ul:first").css("display","block");
+			$("#tree_container").removeClass("tree_saving");
+    		$("#tree_container").addClass("tree_normal");
             treeObj.initTree();
           },
           complete: function(ar1,ar2){
-            document.getElementById("iconIMGnode" + next_id).src = DRUPAL_PATH + '/' + ary[2];
+            $("#iconIMGnode" + next_id).attr("src",DRUPAL_PATH + '/' + ary[2]);
             //run the weights update
             update_weights();
           }
@@ -742,7 +748,8 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
         answer = confirm("This will Delete all subnodes, are you sure?");
       }
       if(answer){
-        document.getElementById("tree_container").className="tree_saving";
+        $("#tree_container").addClass("tree_saving");
+  		$("#tree_container").removeClass("tree_normal");
         $.ajax({
            type: "POST",
            url: AJAX_URL + "delete/" + serialize(del),
@@ -750,7 +757,8 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
              var parentRef = obj.parentNode.parentNode;
              obj.parentNode.removeChild(obj);
              //JSTreeObj.__refreshDisplay(parentRef);
-             document.getElementById("tree_container").className="tree_normal";
+             $("#tree_container").removeClass("tree_saving");
+    		 $("#tree_container").addClass("tree_normal");
              update_weights();
           }
         });
@@ -772,7 +780,8 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
             inputObj.nextSibling.innerHTML = inputObj.value;
             //need an ajax call to just rename this one
             nid = inputObj.parentNode.id.substring(4);
-            document.getElementById("tree_container").className="tree_saving";
+            $("#tree_container").addClass("tree_saving");
+  			$("#tree_container").removeClass("tree_normal");
             $.ajax({
               type: "POST",
               url: AJAX_URL + "rename/" + nid + "/" + inputObj.value,
@@ -781,12 +790,13 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
                   //try to force switching back to the same option even tho the title changed
                   var options = document.getElementById("selected_outline").options;
                   for(i=0;i<options.length;i++){
-                    if(options[i].value == document.getElementById("selected_outline").value){
+                    if(options[i].value == $("#selected_outline").val()){
                       options[i].text = inputObj.value;
                     }
                   }
                 }
-                document.getElementById("tree_container").className="tree_normal";  
+                $("#tree_container").removeClass("tree_saving");
+    			$("#tree_container").addClass("tree_normal"); 
               }
             });
           }
@@ -1003,7 +1013,7 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
         
         if(tagA == ''){
           menuItems[no].insertBefore(iconIMG,spanTag);
-          document.getElementById(iconIMG.id).setAttribute('ondblclick','load_view_node(this.parentNode.id)'); //trying to set the doubleclick correctly
+          $("#" + iconIMG.id).dblclick(function(){load_view_node(this.parentNode.id);});
         }
         if(this.contextMenu){
           var noDelete = menuItems[no].getAttribute('noDelete');
@@ -1044,8 +1054,8 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
             }
           }
         }
-        if(document.getElementById(menuItems[no].id).getElementsByTagName("LI").length==0){
-          document.getElementById(menuItems[no].id).getElementsByTagName("IMG")[0].style.visibility="hidden";
+        if($("#" + menuItems[no].id + " li").length==0){
+          $("#" + menuItems[no].id + " img:first").css('visibility','hidden');
         }
       }
       initExpandedNodes = this.Get_Cookie('dhtmlgoodies_expandedNodes');
@@ -1057,5 +1067,8 @@ Built off the Drag and drop folder tree Library Copyright (C) 2006  DTHMLGoodies
       }
      // document.documentElement.onmousemove = JSTreeObj.moveDragableNodes;  
     //  document.documentElement.onmouseup = JSTreeObj.dropDragableNodes;
-    }    
+		$(document).ready(function(){
+			scale_outline_designer('');
+		});
+    }
   }

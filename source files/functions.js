@@ -33,7 +33,6 @@ $(document).ready(function(){
   treeObj.setMaximumDepth(100);
   treeObj.initTree();
   get_book_roots();
-  load_outline(document.getElementById("selected_outline").value);
   treeObj.createDropIndicator();
   document.documentElement.onselectstart = treeObj.cancelSelectionEvent;
   document.documentElement.ondragstart = treeObj.cancelEvent;
@@ -41,7 +40,7 @@ $(document).ready(function(){
   document.documentElement.onmouseup = treeObj.dropDragableNodes;
   treeObj.helpObj = document.createElement("DIV");
   treeObj.helpObj.style.display = "none";
-  document.body.appendChild(treeObj.helpObj);
+  $("body").append(treeObj.helpObj);
 });
 //scale the interface via jquery
 function scale_outline_designer(scale){
@@ -55,20 +54,22 @@ function scale_outline_designer(scale){
 	if(factor == 1){
 		$("#node0 img").css('width','').css('height','');
 		$("#node0 a").css('font-size','');
+		$("#dragDropIndicatorImage").css('width','').css('height','');
 	}else{
 		$("#node0 img").css('width',factor + 'em').css('height',factor + 'em');
 		$("#node0 a").css('font-size',factor + 'em');
+		$("#dragDropIndicatorImage").css('width',factor + 'em').css('height',factor + 'em');
 	}
 	$("#node0 span").css('margin','0px ' + factor * 5 + 'px 0px ' + factor * 5 + 'px').css('padding','0px ' + factor * 5 + 'px ' + factor * 10 + 'px ' + factor * 5 + 'px');
 	$("#node0 span").css('background-image','url(' + DRUPAL_OD_PATH + '/images/settings' + (factor*100) + '.png)');
 	//take care of drop indicator if we've scaled the interface
-	$("#dragDropIndicatorImage").css('padding',factor * 9 + 'px 0px 0px 0px').css('width',factor + 'em').css('height',factor + 'em');
+	$("#dragDropIndicatorImage").css('padding',factor * 9 + 'px 0px 0px 0px');
 }
 
 //This gets called once a structure is duplicated or a new one is added, it loads up everything visually with permissions taken into account
 function load_outline(nid){
-  document.getElementById("node0").getElementsByTagName("UL")[0].innerHTML="";
-  if(nid !=0){
+  $("#node0 ul:first").html("");
+  if(nid !=''){
   $.ajax({
      type: "GET",
      url: AJAX_URL + "load_tree/" + nid,
@@ -80,7 +81,8 @@ function load_outline(nid){
         ary_pid = ary[i][1];
         ary_title = ary[i][2];
         ary_edit = ary[i][4];
-        nodename = "node" + ary_nid;
+        if(ary_nid != 0){
+		nodename = "node" + ary_nid;
         var li = document.createElement("LI");
         li.id = nodename;
         var span = document.createElement("SPAN");
@@ -97,31 +99,32 @@ function load_outline(nid){
         parentid = "node" + ary_pid;
         //get the UL that is in the parentID that we are looking to insert this new LI into
         //this helps to account for errors caused by JS not changing the name fast enough
-        document.getElementById("node0").getElementsByTagName("UL")[0].appendChild(li);
+        $("#node0 ul:first").append(li);
         if(OUTLINE_POSTS == 1){
-          document.getElementById(nodename).setAttribute("noadd","false");
+         $("#" + nodename).attr("noadd","false");
         }else{
-          document.getElementById(nodename).setAttribute("noadd","true");
+         $("#" + nodename).attr("noadd","true");
         }
         if(ary_edit == 1){
-          document.getElementById(nodename).setAttribute("norename","false");
-          document.getElementById(nodename).setAttribute("nodelete","false");
+         $("#" + nodename).attr("norename","false");
+         $("#" + nodename).attr("nodelete","false");
         }else{
-          document.getElementById(nodename).setAttribute("norename","true");
-          document.getElementById(nodename).setAttribute("nodelete","true");
+         $("#" + nodename).attr("norename","true");
+         $("#" + nodename).attr("nodelete","true");
         }
         if(parentid == "node0"){              
-          document.getElementById(nodename).setAttribute("nodelete","true");
-          document.getElementById(nodename).setAttribute("noDrag","true");
-          document.getElementById(nodename).setAttribute("noSiblings","true");
+         $("#" + nodename).attr("nodelete","true");
+         $("#" + nodename).attr("noDrag","true");
+         $("#" + nodename).attr("noSiblings","true");
         }else{
           if(DRAG_AND_DROP_CONTENT == 0){
-            document.getElementById(nodename).setAttribute("noDrag","true");
+           $("#" + nodename).attr("noDrag","true");
           }
         }
         //set the double click stuff
-        document.getElementById(span.id).setAttribute("ondblclick","load_view_node(this.parentNode.id);");
-        document.getElementById(li.id).getElementsByTagName("A")[0].setAttribute("ondblclick","load_view_node(this.parentNode.id);");
+        //$("#" + span.id).dblclick(load_view_node(this.parentNode.id));
+        $("#" + li.id + " a:first").dblclick(function(){load_view_node(this.parentNode.id);});
+	    }
       }
       treeObj.initTree();
       //folders have been setup, now replace them
@@ -130,22 +133,26 @@ function load_outline(nid){
         ary_nid = ary[i][0];
         ary_pid = ary[i][1];
         ary_type = ary[i][3];
+		if(ary_nid != 0){
         nodeid = "node" + ary_nid;
         parentid = "node" + ary_pid;
-        li = document.getElementById(nodeid);
-        document.getElementById(parentid).getElementsByTagName("UL")[0].appendChild(li);
-        document.getElementById("iconIMG" + nodeid).src = DRUPAL_PATH + '/' + ary_type;
+        li = $("#" + nodeid);
+        $("#" + parentid + " ul:first").append(li);
+        $("#iconIMG" + nodeid).attr('src',DRUPAL_PATH + '/' + ary_type);
+		}
       }
       
       //...now that it is all in order...FINALLY get rid of the stupid plus/minus boxes
       for(var i=0; i<ary.length; i++){
         ary_nid = ary[i][0];
-        nodeid = "tree_ul_" + ary_nid;
-        if(document.getElementById(nodeid).getElementsByTagName("LI").length == 0){
-          document.getElementById(nodeid).parentNode.getElementsByTagName("IMG")[0].style.visibility="hidden";
-        }else{
-          document.getElementById(nodeid).parentNode.getElementsByTagName("IMG")[0].style.visibility="visible";
-        }
+		if(ary_nid != 0){
+			nodeid = "tree_ul_" + ary_nid;
+			if(document.getElementById(nodeid).getElementsByTagName("LI").length == 0){
+			  document.getElementById(nodeid).parentNode.getElementsByTagName("IMG")[0].style.visibility="hidden";
+			}else{
+			  document.getElementById(nodeid).parentNode.getElementsByTagName("IMG")[0].style.visibility="visible";
+			}
+		}
       }
       treeObj.expandAll();
       //try to force a setting of the tree in the select box
@@ -158,7 +165,7 @@ function load_outline(nid){
 }
 //duplicate a book / tree structure from the root.  It will automatically rename the first entry as DUPLICATE * so that you can tell which is the new one
 function duplicate_structure(){
-  var root = document.getElementById("selected_outline").value;
+  var root = $("#selected_outline").val();
   if(root != 0 && confirm("Duplicate this outline? (this may take awhile)")){
     $.ajax({
      type: "POST",
@@ -198,7 +205,7 @@ function duplicate_structure(){
    mywindow.moveTo(300,200);
  }
  
- //goes through and saves everything about the current node structure. this is costly so it isn't used anymore but I left the code around for future potential use
+ /*goes through and saves everything about the current node structure. this is costly so it isn't used anymore but I left the code around for future potential use
  function save_tree(){
   update_weights();
   treeObj.initTree();
@@ -224,13 +231,14 @@ function duplicate_structure(){
   }
    }
  });
- }
+ }*/
  
 //delete a book of content. starts at the root node and works it's way down recursively to get them all.
  function delete_structure(){
-  if(document.getElementById("selected_outline").value != 0){
-    var obj = document.getElementById("node" + document.getElementById("selected_outline").value);
-    document.getElementById("tree_container").className="tree_saving";
+  if($("#selected_outline").val() != 0){
+    var obj = document.getElementById("node" + $("#selected_outline").val());
+    $("#tree_container").addClass("tree_saving");
+    $("#tree_container").removeClass("tree_normal");
     var del = Array();
     var answer = true;
     del.push(obj.id.substring(4));
@@ -246,13 +254,15 @@ function duplicate_structure(){
          success: function(msg){
            var parentRef = obj.parentNode.parentNode;
            obj.parentNode.removeChild(obj);
-           document.getElementById("tree_container").className="tree_normal";
+           $("#tree_container").removeClass("tree_saving");
+      	   $("#tree_container").addClass("tree_normal");
            get_book_roots();
            document.getElementById("selected_outline").childNodes[0].selected = true;
         }
       });
     }else{
-      document.getElementById("tree_container").className="tree_normal";  
+	   $("#tree_container").removeClass("tree_saving");
+      $("#tree_container").addClass("tree_normal");
     }
   }
  }
@@ -279,7 +289,7 @@ function get_book_roots(){
      success: function(msg){
       var ary = Array();
       ary = PHP_Unserialize(msg);
-      values = "<option value='0' SELECTED></option>";
+      values = "<option value='' SELECTED></option>";
       for(var i=0; i<ary.length; i++){
         ary_nid = ary[i][0]; 
         ary_title = ary[i][1];
@@ -288,7 +298,7 @@ function get_book_roots(){
     //need to do this to clear out potential old values and add them all back in, IE work around
       $("#selected_outline").empty();
       $("#selected_outline").append(values);
-      $("#selected_outline").val(0);
+      $("#selected_outline").val('');
      }
   });
 }
@@ -302,8 +312,8 @@ function update_weights(){
   var previouslevel = 0;
   var etext = false;
   var term = Array();
-  var tree = document.getElementById("node0").getElementsByTagName("LI");
-  var root = document.getElementById("selected_outline").value;
+  var tree = $("#node0 li");
+  var root = $("#selected_outline").val();
   //figure out the root url
   for(i=0; i<tree.length; i++){
   idlevel = tree[i].id;
@@ -334,13 +344,15 @@ function update_weights(){
   }
   }
   treeObj.initTree();
-  document.getElementById("tree_container").className="tree_saving";
+  $("#tree_container").addClass("tree_saving");
+  $("#tree_container").removeClass("tree_normal");
   //send off these values
   $.ajax({
   type: "POST",
   url: AJAX_URL + "update_weights/" + serialize(weight),
   success: function(msg){
-    document.getElementById("tree_container").className="tree_normal";
+    $("#tree_container").removeClass("tree_saving");
+    $("#tree_container").addClass("tree_normal");
   }
   });
 }
