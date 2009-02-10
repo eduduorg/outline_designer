@@ -28,6 +28,7 @@ REQUIREMENTS
 *This module requires that you have Book enabled as well as the following contributed modules
 *Ajax forms -- http://drupal.org/projects/ajax
 *Thickbox -- http://drupal.org/projects/thickbox
+*Node Prepopulate -- http://drupal.org/projects/prepopulate
 **Optional: TinyMCE with this module -- http://drupal.org/projects/tinymce
 
 INSTALATION
@@ -36,6 +37,7 @@ INSTALATION
 *Go to admin/content/book/outline_designer and configure your icons 
 *Go to admin/content/book/settings to enable / disable content types from outlining and set default type
 *Go to admin/content/book and click "edit order and titles" to access the outline designer interface.  
+**Optional: If using TinyMCE, make sure that the profile for it allows you to use Tiny on the admin/content/book* page. Otherwise you won't get the correct profile options for your user's view
 
 PERMISSIONS
 Now that the outline designer is fully integrated with the core books module it will obey all the permission settings of books.
@@ -49,8 +51,9 @@ No known issues
   *Camino 1.6.4
   *SeaMonkey
   *Netscape 9
-  *Chrome 0.3
+  *Chrome 1.0.154.48
 
-Known to not work yet
+Known to not work at all
   *Opera 9
+Limited Functionality (No context menu support at this time)
   *IE (All versions)

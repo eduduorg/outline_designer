@@ -42,7 +42,7 @@ Drupal.theme.tableDragChangedWarning = function () {
 	//add area for status messages to float
 	//add the hidden modal for adding a child
 	//add area for type change modal
-	$("body").append('<div id="od_status_msg" align="center"></div><div id="tb_ajax"></div><div id="od_change_type"><input type="button" value="Submit" id="od_change_type_submit"/> <input type="button" value="Cancel" id="od_change_type_cancel" /></div><div id="od_add_child"><div><strong>Title: </strong><input size="30" type="text" id="od_add_child_title" name="od_add_child_title"></div><div id="od_wrapper"><div id="od_content_types">'+ od_content_types() +'</div><div><input type="button" value="Submit" id="od_add_child_submit"/> <input type="button" value="Cancel" id="od_add_child_cancel" /></div></div></div>');
+	$("body").append('<div id="od_duplicate_node"><input type="checkbox" id="od_duplicate_multiple" />Duplicate all children<br /><br />How should the new title be formed?<input type="textfield" id="od_duplicate_title" value="Duplicate of %title" /><br /><br /><input type="button" name="Submit" value="Submit" onclick="od_duplicate_submit();" /><input type="button" name="Cancel" value="Cancel" onclick="tb_remove();' + "$('#od_duplicate_node').css('display','none').appendTo('body');" + '" /></div><div id="od_delete_node"><input type="checkbox" id="od_delete_multiple" />Delete all children<br /><br /><input type="button" name="Submit" value="Submit" onclick="od_delete_submit();" /><input type="button" name="Cancel" value="Cancel" onclick="tb_remove();' + "$('#od_delete_node').css('display','none').appendTo('body');" + '" /></div> <div id="od_status_msg" align="center"></div><div id="tb_ajax"></div><div id="od_change_type"><input type="button" value="Submit" id="od_change_type_submit"/> <input type="button" value="Cancel" id="od_change_type_cancel" /></div><div id="od_add_child"><div><strong>Title: </strong><input size="30" type="text" id="od_add_child_title" name="od_add_child_title"></div><div id="od_wrapper"><div id="od_content_types">'+ od_content_types() +'</div><div><input type="button" value="Submit" id="od_add_child_submit"/> <input type="button" value="Cancel" id="od_add_child_cancel" /></div></div></div>');
 	$("#od_content_types input").val([BOOK_DEFAULT_TYPE]);	
 	//ADD CHILD EVENTS
 	$("#od_add_child_title").bind('keyup',function(e){
@@ -83,6 +83,12 @@ Drupal.theme.tableDragChangedWarning = function () {
  * behaviors specific to the outline designer for overloading functions
  */
 Drupal.behaviors.outline_designer = function (context) {
+	$("#book-outline th:last").css('display','none');
+	$("tr.draggable td").each(function(i){
+	  if((i+1) % 6 == 0 || (i+1) % 6 == 4 || (i+1) % 6 == 5) {
+		this.style.display = 'none';
+	  }
+	});	
 	//replace text fields with span's w/ their same content
   if (context != "#TB_ajaxContent") {
 	$("#book-outline .form-text").each(function(){
@@ -366,26 +372,6 @@ function od_add_child_submit() {
 		var msg_split = new RegExp(";msg:");
 		msg_split.test(msg);
 		msg = RegExp.rightContext;
-		/*var plid = RegExp.leftContext;
-		var old_plid = $('#edit-table-book-admin-' + active_nid + '-mlid').val();
-		var new_nid = msg.replace('Node ','').replace(' added successfully!','');
-		$("#node-" + active_nid +"-icon").parent().parent().clone().attr('id','new_node').insertAfter($("#node-" + active_nid +"-icon").parent().parent());
-		//strange yet formatted and specific replacement of ids from the cloned ones to the new ones
-	    $("#new_node td:first").prepend('<div class="indentation">&nbsp;</div>');
-		$("#new_node td:first img:first").attr("id","node-" + new_nid +"-icon").attr("src",DRUPAL_PATH + OD_TYPES[active_type][1]).attr("alt","Nid: "+ new_nid).attr("title","Nid: "+ new_nid);
-		$("#new_node td:first img:last").attr("id","node-" + new_nid);
-		$("#new_node td:first div:last").attr("id","edit-table-book-admin-" + new_nid +"-title-wrapper");
-		$("#new_node input:first").attr("id","edit-table-book-admin-" + new_nid +"-title");
-		$("#new_node span:first").attr("id","edit-table-book-admin-" + new_nid +"-title-span");
-		
-		$('#edit-table-book-admin-' + new_nid + '-title').val($("#od_add_child_title").val());
-		$('#edit-table-book-admin-' + new_nid + '-title-span').html($("#od_add_child_title").val());
-		Drupal.attachBehaviors('#new_node');
-		$('#new_node a').each(function(){
-			this.href = this.href.replace("node/"+ active_nid,"node/"+ new_nid);
-		});
-		$('#new_node').attr('id','');
-		*/
 		$("#reload_table").trigger('change');
 		od_response_msg(msg);
 		od_add_child_tb_close();
@@ -403,17 +389,30 @@ function od_edit() {
 	  type: "POST",
 	  url: AJAX_PATH + "edit/" + active_nid,
 	  success: function(msg){
-		tb_show("","#TB_inline?height=480&width=640&modal=true", false);
-		$("#TB_ajaxContent").append(msg);
-		Drupal.attachBehaviors("#TB_ajaxContent");
-		//add tiny field if it exists
-		if (window.tinyMCE && window.tinyMCE.triggerSave) {
-			tinyMCE.execCommand('mceAddControl', false, 'edit-body');
+		//show an error message if edit node returned 0 cause failed permissions
+		if(msg == 0) {
+		   od_response_msg("You don't have sufficient permissions to edit this node");
 		}
-		//append the cancel button to the form
-		$("#od_change_type_cancel").appendTo("#node-form");
+		else {
+		  tb_show("","#TB_inline?height=480&width=640&modal=true", false);
+		  $("#TB_ajaxContent").append(msg);
+		  Drupal.attachBehaviors("#TB_ajaxContent");
+		  //add tiny field if it exists
+		  if (window.tinyMCE && window.tinyMCE.triggerSave && $('#edit-body').length != 0) {
+			tinyMCE.execCommand('mceAddControl', false, 'edit-body');
+	      }
+		  //append the cancel button to the form
+		  $(".node-form").append("<input type='button' name='Cancel' value='Cancel' onclick='od_edit_cancel();'/>");
+		}
 	  }
   });
+}
+function od_edit_cancel(){
+  if (window.tinyMCE && window.tinyMCE.triggerSave && $('#edit-body').length != 0) {
+	  tinyMCE.execCommand('mceFocus', false, 'edit-body');              
+	  tinyMCE.execCommand('mceRemoveControl', false, 'edit-body');
+  }
+  tb_remove();
 }
 
 //starts the rename process
@@ -449,43 +448,49 @@ function od_rename_submit() {
 		});
 	}
 }
-//duplicates a part of the structure
-function od_duplicate() {
-  if(confirm("Duplicate this node?")){
-	  var multiple = 0;
-	  if(confirm("Would you like to duplicate all children of this node?")){
-		multiple = 1;
-	  }
-	  var dup_title = prompt("How should the new title be formed?",'Duplicate of %title');
-	  dup_title = dup_title.replace(/%2F/g,"@2@F@");
-    $.ajax({
-      type: "POST",
-      url: AJAX_PATH + "duplicate/" + active_nid + "/" + multiple + "/" + dup_title,
-      success: function(msg){
-		$("#reload_table").trigger('change');
-        od_response_msg(msg);
-	  }
-    });
-  }
+//duplicate part (or all) of a structure
+function od_duplicate(){
+  $("#od_duplicate_multiple").remove();
+  $("#od_duplicate_node").prepend('<input type="checkbox" id="od_duplicate_multiple"/>');
+  tb_show("Duplicate Node(s) -- <img style='vertical-align:middle;' src='"+ OD_PATH + "/images/duplicate.png'/> <span></span>","#TB_inline?height=200&width=300", false);
+  $("#od_duplicate_node").css('display','block').appendTo("#TB_ajaxContent");
+}
+function od_duplicate_submit(){
+  var multiple = $('#od_duplicate_multiple:checked').length;
+  var dup_title = $("#od_duplicate_title").val();
+  dup_title = dup_title.replace(/%2F/g,"@2@F@");
+  $.ajax({
+    type: "POST",
+    url: AJAX_PATH + "duplicate/" + active_nid + "/" + multiple + "/" + dup_title,
+    success: function(msg){
+      $("#reload_table").trigger('change');
+      od_response_msg(msg);
+	  $("#od_duplicate_node").css('display','none').appendTo("body");
+	  $("#od_duplicate_title").val('Duplicate of %title');
+	  tb_remove();
+    }
+  });	
 }
 
 function od_delete(){
-  if (confirm('Are you sure you want to delete node ' + active_nid + '?')) {
-	  var multiple = 0;
-	  if(confirm("Would you like to delete all children of this node?")){
-		multiple = 1;
-	  }
-      $.ajax({
-         type: "POST",
-         url: AJAX_PATH + "delete/" + active_nid + "/" + multiple,
-         success: function(msg){
-			$("#reload_table").trigger('change');
-			od_response_msg(msg);
-        }
-      });
-  }	
+  $("#od_delete_multiple").remove();
+  $("#od_delete_node").prepend('<input type="checkbox" id="od_delete_multiple"/>');
+  tb_show("Delete Node(s) -- <img style='vertical-align:middle;' src='"+ OD_PATH + "/images/delete.png'/> <span></span>","#TB_inline?height=200&width=300", false);
+  $("#od_delete_node").css('display','block').appendTo("#TB_ajaxContent");
 }
-
+function od_delete_submit(){
+  var multiple = $('#od_delete_multiple:checked').length;
+  $.ajax({
+    type: "POST",
+    url: AJAX_PATH + "delete/" + active_nid + "/" + multiple,
+    success: function(msg){
+	  $("#reload_table").trigger('change');
+      od_response_msg(msg);
+	  $("#od_delete_node").css('display','none').appendTo("body");
+	  tb_remove();
+    }
+  });	
+}
 function od_change_type() {
 	var type_src = $("#node-" + active_nid +"-icon").attr('src').replace(DRUPAL_PATH,'');
 	var i=0;
@@ -512,22 +517,26 @@ function od_change_type_submit() {
         }
       });
 }
-
 function od_change_type_tb_close() {
-	tb_remove();
-	//$("#od_content_types").prependTo($("#od_wrapper"));	
+	tb_remove();	
 }
 
+//permissions setting if the node privacy by role module exists
+function od_permissions() {
+  alert('Future Functionality...');
+  //snag the possible permissions / currently selected ones for this node
+  //give the ability to cascade these permissions down this branch
+}
 /**
  * Overload ajax functionality of the ajax module. onsuccess != redirect page
  */
-Ajax.response = function(submitter, formObj, data){
+Drupal.Ajax.response = function(submitter, formObj, data){
   var newSubmitter;
   /**
    * Failure
    */
   if (data.status === false) {
-    Ajax.message(data.messages_error, 'error', formObj, submitter);
+    Drupal.Ajax.message(data.messages_error, 'error', formObj, submitter);
   }
   /**
    * Success
@@ -535,7 +544,7 @@ Ajax.response = function(submitter, formObj, data){
   else {
     // Display preview
     if (data.preview !== null) {
-      Ajax.message(decodeURIComponent(data.preview), 'preview',
+      Drupal.Ajax.message(decodeURIComponent(data.preview), 'preview',
         formObj, submitter);
       // Sometimes the submit button needs to show up afterwards
       //if ($('#edit-submit').length === 0) {
@@ -547,14 +556,14 @@ Ajax.response = function(submitter, formObj, data){
     // If no redirect, then simply show messages
     else if (data.redirect === null) {
       if (data.messages_status.length > 0) {
-        Ajax.message(data.messages_status, 'status', formObj, submitter);
+        Drupal.Ajax.message(data.messages_status, 'status', formObj, submitter);
       }
       if (data.messages_warning.length > 0) {
-        Ajax.message(data.messages_warning, 'warning', formObj, submitter);
+        Drupal.Ajax.message(data.messages_warning, 'warning', formObj, submitter);
       }
       if (data.messages_status.length === 0 &&
           data.messages_warning.length === 0) {
-        Ajax.message([{
+        Drupal.Ajax.message([{
           id : 0,
           value : 'Submission Complete.'
         }], 'status', formObj, submitter);
@@ -568,15 +577,37 @@ Ajax.response = function(submitter, formObj, data){
 	  var saved_title = $("#edit-title").val();
 	  $('#edit-table-book-admin-' + active_nid + '-title').val(saved_title);
 	  $('#edit-table-book-admin-' + active_nid + '-title-span').html(saved_title);
-	  //saving is complete, remove the thick box window
-	  tb_remove();
 	  //get rid of tinymce instance if it exists
-	  if (window.tinyMCE && window.tinyMCE.triggerSave) {
-		  tinyMCE.execCommand('mceFocus', false, 'edit-body');                    
+	  if (window.tinyMCE && window.tinyMCE.triggerSave && $('#edit-body').length != 0) {
+		  tinyMCE.execCommand('mceFocus', false, 'edit-body');              
 		  tinyMCE.execCommand('mceRemoveControl', false, 'edit-body');
 	  }
+	  //saving is complete, remove the thick box window
+	  tb_remove();
 	  //display updated message
 	  od_response_msg("Node "+ active_nid +" updated");
     }
   }
 }
+
+//this was glitching out the outline designer so I had to overload it if was activated
+Drupal.Ajax.plugins.thickbox = function(hook, args) {
+  var tb_init_original;
+  if (hook === 'scrollFind') {
+    if (args.container.id === 'TB_window') {
+      return false;
+    }
+    else {
+      return true;
+    }
+  }
+  else if (hook === 'init') {
+    tb_init_original = window.tb_init;
+    window.tb_init = function(domChunk){
+      tb_init_original(domChunk);
+      //Drupal.attachBehaviors($('#TB_window'));
+    }
+  }
+  return true;
+}
+
