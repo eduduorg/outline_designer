@@ -141,7 +141,7 @@ function outline_designer_form_alter(&$form, $form_state, $form_id) {
     $base_path = base_path();
     foreach ($form['table'] as $key => $row) {
       if($key != '#theme' && $key != '#tree') {
-        $type = db_result(db_query("SELECT type FROM node WHERE nid=%s",$row['nid']['#value']));
+        $type = db_result(db_query("SELECT type FROM {node} WHERE nid=%s",$row['nid']['#value']));
           $form['table'][$key]['title']['#prefix'] = '<img id="node-'. $row['nid']['#value'] .'-icon" src="'. $base_path . variable_get("outline_designer_". $type ."_icon", $od_path ."/images/node.png") .'"  alt="Nid: '. $row['nid']['#value'] .'" title="Nid: '. $row['nid']['#value'] .'" style="float:left; margin:2px;" /><img src="'. $base_path . $od_path .'/images/edit.png" id="node-'. $row['nid']['#value'] .'" class="outline_designer_edit_button" />';
       }
     }
@@ -249,10 +249,9 @@ function _outline_designer_settings($form_state) {
       '#type' => 'file', 
       '#size' => '10', 
       '#title' => t("Icon for ". $value['name']), 
-      /*'#default_value' => variable_get("outline_designer_". $value['type'] ."_icon",  drupal_get_path('module', 'outline_designer') ."/images/node.png"), */
-      '#description' => t("This is what icon will be associated to each content type in the outline designer. They must be 16x16 gif or png format."), 
+      '#description' => t("This icon will be associated with the %type-name content type in the outline designer. The icon must be 16x16, unless an <a href=@toolkit>image toolkit</a> is installed, and in jpg, gif or png format.", array('%type-name' => $value['type'], '@toolkit'=> url('admin/settings/image-toolkit'))), 
       '#required' => FALSE, 
-      );
+    );
   }
   $form['#attributes'] = array('enctype' => "multipart/form-data");
   $form['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
@@ -266,53 +265,33 @@ function _outline_designer_settings_submit($form, &$form_state) {
   $is_writable = file_check_directory($dir,  1);
   if ($is_writable) { 
     $validators = array(
-      'file_validate_is_image' => array(), 
-      'file_validate_image_resolution' => array('85x85'), 
-      'file_validate_size' => array(30 * 1024), 
+     'file_validate_is_image' => array(),
+     '_outline_designer_validate_image_resolution' => array('16x16'),
+     'file_validate_size' => array(30 * 1024), 
     );
     $result = db_query("SELECT type, name FROM {node_type}");
-    while ($value = db_fetch_array($result)) {
-        if ($file = file_save_upload($form["outline_designer_". $value['type'] ."_icon"],  $validators, $dir)) {
-          $image_ary = image_get_info($file->filepath);
-          if ($image_ary) {
-            //icons must be 16x16,  png or gif format
-            if ($image_ary['mime_type'] != 'image/png' && $image_ary['mime_type'] != 'image/gif') {
-              file_delete($file->filepath);
-              drupal_set_message('Uploaded file must be PNG or GIF format.', 'error');
-            }
-            else {
-              if ($image_ary['height'] != 16 || $image_ary['width'] != 16) {
-                file_delete($file->filepath);
-                drupal_set_message('Uploaded image must be 16x16 pixels.', 'error');
-              }
-              else {
-                drupal_set_message(t('New '. $value['name'] .' icon saved.'));
-                variable_set("outline_designer_". $value['type'] ."_icon",  $file->filepath);
-              }
-            }
-          }
-          else {
-            file_delete($file->filepath);
-            drupal_set_message('Uploaded file does not appear to be a valid image file. Please try again.', 'error');
+     while ($value = db_fetch_array($result)) {
+       if ($file = file_save_upload("outline_designer_". $value['type'] ."_icon",  $validators, $dir)) {
+         drupal_set_message(t('New '. $value['name'] .' icon saved.'));
+         variable_set("outline_designer_". $value['type'] ."_icon",  $file->filepath);
+       }
+       else {
+        //this is the case when there is no image uploaded to associate the textfield icon to the icon page to use,  this will allow for references to icons already used
+        $icon = $form_state['values']["outline_designer_". $value['type'] ."_icon_link"];
+        $base_path = base_path();
+        //pull off the site name if it was included
+        if ($base_path != '/' && $base_path != '') {
+          if (strpos(' '. $icon, $base_path ) != 0) {
+            $pos = strpos($icon, $base_path) + strlen($base_path);
+            $icon = substr($icon, $pos);
           }
         }
-        else {
-      //this is the case when there is no image uploaded to associate the textfield icon to the icon page to use,  this will allow for references to icons already used
-      $icon = $form_state['values']["outline_designer_". $value['type'] ."_icon_link"];
-      $base_path = base_path();
-      //pull off the site name if it was included
-      if ($base_path != '/' && $base_path != '') {
-        if (strpos(' '. $icon, $base_path ) != 0) {
-        $pos = strpos($icon, $base_path) + strlen($base_path);
-        $icon = substr($icon, $pos);
-        }
+        //clean up the string incase those other two didn't do the trick
+        $icon = substr($icon, strpos($icon, drupal_get_path('module', 'outline_designer')));
+        $icon = substr($icon, strpos($icon, file_directory_path()));
+        //potentially this isn't a valid icon path on our server...need to still check this
+        variable_set("outline_designer_". $value['type'] ."_icon",  $icon);
       }
-      //clean up the string incase those other two didn't do the trick
-      $icon = substr($icon, strpos($icon, drupal_get_path('module', 'outline_designer')));
-      $icon = substr($icon, strpos($icon, file_directory_path()));
-      //potentially this isn't a valid icon path on our server...need to still check this
-      variable_set("outline_designer_". $value['type'] ."_icon",  $icon);
-    }
     }
   }  
   drupal_set_message('Settings Saved!');
@@ -452,7 +431,7 @@ function _outline_designer_ajax() {
           $map = array();
           //pull only the nodes that have this node as a parent
 		  $mlid = $node->book['mlid'];
-          $result = db_query("SELECT link_path FROM menu_links WHERE p1=%s  OR p2=%s  OR p3=%s  OR p4=%s  OR p5=%s  OR p6=%s  OR p7=%s  OR p8=%s  OR p9=%s",$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid);
+          $result = db_query("SELECT link_path FROM {menu_links} WHERE p1=%s  OR p2=%s  OR p3=%s  OR p4=%s  OR p5=%s  OR p6=%s  OR p7=%s  OR p8=%s  OR p9=%s",$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid);
           while ($value = db_fetch_array($result)) {
 		    $dup_node = node_load(str_replace('node/','',$value['link_path']));
 			$nids.= ' '. $dup_node->nid . ', ';
@@ -486,7 +465,7 @@ function _outline_designer_ajax() {
 		$node = node_load($nid);
           //pull only the nodes that have this node as a parent
 		  $mlid = $node->book['mlid'];
-          $result = db_query("SELECT link_path FROM menu_links WHERE p1=%s  OR p2=%s  OR p3=%s  OR p4=%s  OR p5=%s  OR p6=%s  OR p7=%s  OR p8=%s  OR p9=%s",$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid);
+          $result = db_query("SELECT link_path FROM {menu_links} WHERE p1=%s  OR p2=%s  OR p3=%s  OR p4=%s  OR p5=%s  OR p6=%s  OR p7=%s  OR p8=%s  OR p9=%s",$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid);
           while ($value = db_fetch_array($result)) {
             node_delete(str_replace('node/','',$value['link_path']));
 		  }
@@ -538,3 +517,26 @@ function _outline_designer_get_pstr($op,  $type) {
       
   return ($op .' '. $type .' '. $term);
 }
+
+function _outline_designer_validate_image_resolution(&$file, $dimensions) {
+  $errors = array();
+  // Check first that the file is an image.
+  if ($info = image_get_info($file->filepath)) {
+    // Check if the icon matches the given dimensions.
+    list($width, $height) = explode('x', $dimensions);
+    if ($info['width'] != $width || $info['height'] != $height) {
+      // Try to resize the image to fit the dimensions if it doesn't.
+      if (image_get_toolkit() && image_scale_and_crop($file->filepath, $file->filepath, $width, $height)) {
+       drupal_set_message(t('The image was resized to the allowed dimensions of %dimensions pixels.', array('%dimensions' => $dimensions)));
+       // Clear the cached filesize and refresh the image information.
+       clearstatcache();
+       $info = image_get_info($file->filepath);
+       $file->filesize = $info['file_size'];
+      }
+      else {
+        $errors[] = t('Image dimensions need to be %dimensions pixels.', array('%dimensions' => $maximum_dimensions));
+      }
+    }
+  }
+  return $errors;
+ }
