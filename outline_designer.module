@@ -41,7 +41,8 @@ function outline_designer_init() {
     drupal_add_css(drupal_get_path('module','outline_designer') .'/outline_designer.css');
     drupal_add_js(drupal_get_path('module', 'outline_designer') .'/jquery.contextmenu.js');
 	drupal_add_js(drupal_get_path('module', 'outline_designer') .'/scripts.js','footer');
-  
+    //still a weird issue with clean URLS needing to be turned off just to be safe
+	variable_set('clean_url','0');
   //these are the misc javascript libraries that normally don't get included but we need to cause things ar einine
   drupal_add_js('misc/jquery.form.js');
   drupal_add_js('misc/ahah.js');
@@ -167,6 +168,8 @@ function outline_designer_block($op = 'list', $delta = 0, $edit = array()) {
       );
       return $blocks;
 	break;
+	case 'configure':
+    break;
     case 'view': default:
 	  switch($delta){
 	  case 0:  
@@ -385,7 +388,7 @@ function _outline_designer_ajax() {
 		  module_load_include('inc', 'node', 'node.pages');
           $output = node_page_edit($node);
 		}
-		elseif (user_access(_outline_designer_get_pstr('edit',$node->type))) {
+		elseif (user_access(_outline_designer_get_pstr('edit any',$node->type))) {
           module_load_include('inc', 'node', 'node.pages');
           $output = node_page_edit($node);
 		}
@@ -505,14 +508,9 @@ function _outline_designer_get_pstr($op,  $type) {
       elseif ($op == 'edit own') {
         return 'edit own panel-nodes';
       }
-      break;
-
-    case 'book':
-      $term = 'pages';
-      break;
-
+    break;
     default:
-      break;
+    break;
   }
       
   return ($op .' '. $type .' '. $term);

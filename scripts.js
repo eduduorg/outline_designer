@@ -365,18 +365,24 @@ function od_add_child_submit() {
 	pattern.test(ser);
 	var title = RegExp.rightContext;
 	title = title.replace(/%2F/g,"@2@F@");
-	$.ajax({
-	  type: "POST",
-	  url: AJAX_PATH + "add_child/" + title + "/" + active_type + "/" + active_nid,
-	  success: function(msg){
-		var msg_split = new RegExp(";msg:");
-		msg_split.test(msg);
-		msg = RegExp.rightContext;
-		$("#reload_table").trigger('change');
-		od_response_msg(msg);
-		od_add_child_tb_close();
-	  }
-	});
+	if (title == "") {
+		alert("You must enter a title in order to submit a new node!");
+		return false;
+	}
+	else {
+	  $.ajax({
+	    type: "POST",
+	    url: AJAX_PATH + "add_child/" + title + "/" + active_type + "/" + active_nid,
+	    success: function(msg){
+	  	  var msg_split = new RegExp(";msg:");
+		  msg_split.test(msg);
+		  msg = RegExp.rightContext;
+		  $("#reload_table").trigger('change');
+		  od_response_msg(msg);
+		  od_add_child_tb_close();
+	    }
+	  });
+	}
 }
 
 function od_add_child_tb_close(){

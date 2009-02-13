@@ -19,6 +19,10 @@
 /*
  * Outline designer specific buttons / system
  */
+#od_delete_node, #od_duplicate_node {
+  display:none;
+}
+ 
 .outline_designer_edit_button{
   margin: 2px 5px;
   float:left;
