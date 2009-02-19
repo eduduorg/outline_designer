@@ -26,10 +26,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 REQUIREMENTS
 *This module requires that you have Book enabled as well as the following contributed modules
-*Ajax forms -- http://drupal.org/projects/ajax
-*Thickbox -- http://drupal.org/projects/thickbox
-*Node Prepopulate -- http://drupal.org/projects/prepopulate
-**Optional: TinyMCE with this module -- http://drupal.org/projects/tinymce
+*Ajax forms -- http://drupal.org/project/ajax
+*Thickbox -- http://drupal.org/project/thickbox
+*Node Prepopulate -- http://drupal.org/project/prepopulate
+**Optional: TinyMCE with this module -- http://drupal.org/project/tinymce
 
 INSTALATION
 *Place the outline_designer directory in the correct modules folder as you would any other Drupal module
@@ -40,7 +40,7 @@ INSTALATION
 **Optional: If using TinyMCE, make sure that the profile for it allows you to use Tiny on the admin/content/book* page. Otherwise you won't get the correct profile options for your user's view
 
 PERMISSIONS
-Now that the outline designer is fully integrated with the core books module it will obey all the permission settings of books.
+The outline designer is fully compatible with the permissions designated by your drupal site.
 There is one permission that needs to be set called "access ajax path" this may seem silly but is nessecary so that the path for submitting ajax requests is protected from the outside world.
 
 COMPATABILITY

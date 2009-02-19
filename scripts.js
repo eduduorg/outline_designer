@@ -444,12 +444,18 @@ function od_rename_submit() {
 		pattern.test(ser);
 		var title = RegExp.rightContext;
 		title = title.replace(/%2F/g,"@2@F@");
-		$('#edit-table-book-admin-' + active_nid + '-title-span').html($('#edit-table-book-admin-' + active_nid + '-title').val());
 		$.ajax({
 		  type: "POST",
 		  url: AJAX_PATH + "rename/" + active_nid + "/" + title,
 		  success: function(msg){
-			od_response_msg(msg);
+			if(msg == 0) {
+			  $('#edit-table-book-admin-' + active_nid + '-title').val($('#edit-table-book-admin-' + active_nid + '-title-span').html());
+		      od_response_msg("You don't have sufficient permissions to rename this node");
+		    }
+		    else {
+			  $('#edit-table-book-admin-' + active_nid + '-title-span').html($('#edit-table-book-admin-' + active_nid + '-title').val());
+			  od_response_msg(msg);
+		    }
 		  }
 		});
 	}
@@ -491,7 +497,12 @@ function od_delete_submit(){
     url: AJAX_PATH + "delete/" + active_nid + "/" + multiple,
     success: function(msg){
 	  $("#reload_table").trigger('change');
-      od_response_msg(msg);
+	  if(msg == 0) {
+        od_response_msg("You don't have sufficient permissions to delete this node");
+	  }
+      else {
+        od_response_msg(msg);
+	  }
 	  $("#od_delete_node").css('display','none').appendTo("body");
 	  tb_remove();
     }
@@ -517,9 +528,14 @@ function od_change_type_submit() {
          type: "POST",
          url: AJAX_PATH + "change_type/" + active_nid + '/' + active_type,
          success: function(msg){
-		   $("#node-" + active_nid +"-icon").attr('src',DRUPAL_PATH + OD_TYPES[active_type][1]);
-           od_change_type_tb_close();
-		   od_response_msg(msg);
+		   if (msg == 0) {
+		     od_response_msg("You don't have sufficient permissions to edit this node");
+		   }
+		   else {
+		     $("#node-" + active_nid +"-icon").attr('src',DRUPAL_PATH + OD_TYPES[active_type][1]);
+		     od_response_msg(msg);
+		   }
+		   od_change_type_tb_close();
         }
       });
 }

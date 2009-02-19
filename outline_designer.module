@@ -54,6 +54,20 @@ function outline_designer_init() {
   //include thickbox which is required
   _thickbox_doheader();
   
+  //Select only those that the book module say can be outlined
+  $types_ary = variable_get('book_allowed_types',array('page'));
+  
+  //make sure default is allowed by this user
+  if (user_access(_outline_designer_get_pstr('create',variable_get('book_child_type','book')))) {
+    $default_type = variable_get('book_child_type','book');
+  }
+  else {
+    foreach ($types_ary as $current_type) {
+      if (user_access(_outline_designer_get_pstr('create',$current_type))) {
+        $default_type = $current_type;
+      }
+	}
+  }
   //all paths passed to JS should have a trailing / by convention
   $js = 'var factor = 1;
   var DRUPAL_PATH = "'. base_path() .'";
@@ -62,7 +76,7 @@ function outline_designer_init() {
   var OD_TYPES = Array();
   var active_nid = "";
   var ROOT_NID = "'. arg(3) .'";
-    var BOOK_DEFAULT_TYPE = "'. variable_get('book_child_type','book') .'";
+    var BOOK_DEFAULT_TYPE = "'. $default_type .'";
   //build out the context menu options, very easy to add to!
   var menu1 = [   
     {"Node":{icon: "'. base_path() . drupal_get_path('module', 'outline_designer') .'/images/node.png", disabled:true}}, 
@@ -77,8 +91,7 @@ function outline_designer_init() {
   
   ];
   var active_type = BOOK_DEFAULT_TYPE;' . "\n";
-  //Select only those that the book module say can be outlined
-    $types_ary = variable_get('book_allowed_types',array('page'));
+  //make sure the user can submit these types via permissions
   $types_allowed = "type=''";
   for ($i=0; $i<count($types_ary); $i++) {
     $types_allowed.=" OR type='". $types_ary[$i] ."'";
@@ -405,12 +418,25 @@ function _outline_designer_ajax() {
         $newtitle = $var2;
         $newtitle = str_replace("@2@F@",'/',$newtitle);
         $node = node_load($nid);
-        $node->log = "Outline Designer -- node renamed from ". $node->title ." to ". $newtitle;
-        watchdog('content', "Outline Designer -- node renamed from ". $node->title ." to ". $newtitle);
-        print "Node $nid renamed from ". $node->title ." to ". $newtitle;
-        $node->title = $newtitle;
-        $node->revision = 1;
-        node_save($node);
+		if ($user->uid == $node->uid && user_access(_outline_designer_get_pstr('edit own',$node->type))) {
+		  $node->log = "Outline Designer -- node renamed from ". $node->title ." to ". $newtitle;
+          watchdog('content', "Outline Designer -- node renamed from ". $node->title ." to ". $newtitle);
+          print "Node $nid renamed from ". $node->title ." to ". $newtitle;
+          $node->title = $newtitle;
+          $node->revision = 1;
+          node_save($node);
+		}
+		elseif (user_access(_outline_designer_get_pstr('edit any',$node->type))) {
+          $node->log = "Outline Designer -- node renamed from ". $node->title ." to ". $newtitle;
+          watchdog('content', "Outline Designer -- node renamed from ". $node->title ." to ". $newtitle);
+          print "Node $nid renamed from ". $node->title ." to ". $newtitle;
+          $node->title = $newtitle;
+          $node->revision = 1;
+          node_save($node);
+		}
+	    else {
+         print 0;
+		}
       break;
       //in: root node id
       //action: duplicate the node and associate the tree to the new branch (if multiple)
@@ -424,6 +450,7 @@ function _outline_designer_ajax() {
         if ($multiple == 0) {
           $node->nid = NULL;
 		  $node->created = NULL;
+		  $node->uid = $user->uid;
 		  $new_title = str_replace('%title',$node->title,$dup_title);
           $node->title = $new_title;
           node_save($node);
@@ -440,6 +467,7 @@ function _outline_designer_ajax() {
 			$nids.= ' '. $dup_node->nid . ', ';
 			$dup_node->nid = NULL;
 			$dup_node->created = NULL;
+			$dup_node->uid = $user->uid;
 			$dup_node->revision = 1;
             $dup_node->log = "Outline Designer -- Duplicate of old node nid:$old_nid";
 			if (isset($map[$dup_node->book['plid']]) ) {
@@ -461,19 +489,49 @@ function _outline_designer_ajax() {
       case 'delete':
         $nid = $var1;
 		$multiple = $var2;
+		$node = node_load($nid);
 		if ($multiple == 0) {
-          node_delete($nid);
+		  if ($user->uid == $node->uid && user_access(_outline_designer_get_pstr('delete own',$node->type))) {
+		    print "Node $nid successfully removed!";
+            node_delete($nid);
+		  }
+		  elseif (user_access(_outline_designer_get_pstr('delete any',$node->type))) {
+            print "Node $nid successfully removed!";
+            node_delete($nid);
+		  }
+	      else {
+            print 0;
+		  }
 		}
 		else {
-		$node = node_load($nid);
+		  $node = node_load($nid);
           //pull only the nodes that have this node as a parent
 		  $mlid = $node->book['mlid'];
           $result = db_query("SELECT link_path FROM {menu_links} WHERE p1=%s  OR p2=%s  OR p3=%s  OR p4=%s  OR p5=%s  OR p6=%s  OR p7=%s  OR p8=%s  OR p9=%s",$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid,$mlid);
+		  $del_count = 0;
+		  $count = 0;
           while ($value = db_fetch_array($result)) {
-            node_delete(str_replace('node/','',$value['link_path']));
+		    $count++;
+			$node = node_load(str_replace('node/','',$value['link_path']));
+		    if ($user->uid == $node->uid && user_access(_outline_designer_get_pstr('delete own',$node->type))) {
+		      $del_count++;
+              node_delete($node->nid);
+		    }
+		    elseif (user_access(_outline_designer_get_pstr('delete any',$node->type))) {
+              $del_count++;
+              node_delete($node->nid);
+		    }
+		  }
+		  if ($del_count == 0) {
+		    print 0;
+		  }
+		  elseif ($count != $del_count) {
+		    print "A multiple delete was commited but you didn't have the permissions to delete ALL of the children nodes so some remain.";
+		  }
+		  else {
+		    print "All nodes were deleted successfully.";
 		  }
 		}
-        print "Node $nid successfully removed!";
       break;
       //in: node id,  node type name
       //action: change node type and resave
@@ -482,12 +540,25 @@ function _outline_designer_ajax() {
         $nid = $var1;
         $new_type = $var2;
         $node = node_load($nid);
-        $log_msg = " Node $nid changed from '". $node->type ."' to '$new_type'";
-        $node->log = "Outline Designer -- ". $log_msg;
-        $node->type = $new_type;
-        node_save($node);
-        watchdog('content', "Outline Designer -- ". $log_msg);
-        print $log_msg;
+		if ($user->uid == $node->uid && user_access(_outline_designer_get_pstr('edit own',$node->type))) {
+          $log_msg = " Node $nid changed from '". $node->type ."' to '$new_type'";
+          $node->log = "Outline Designer -- ". $log_msg;
+          $node->type = $new_type;
+          node_save($node);
+          watchdog('content', "Outline Designer -- ". $log_msg);
+		  print $log_msg;
+		}
+		elseif (user_access(_outline_designer_get_pstr('edit any',$node->type))) {
+		  $log_msg = " Node $nid changed from '". $node->type ."' to '$new_type'";
+          $node->log = "Outline Designer -- ". $log_msg;
+          $node->type = $new_type;
+          node_save($node);
+          watchdog('content', "Outline Designer -- ". $log_msg);
+		  print $log_msg;
+		}
+		else {
+          print 0;
+		}
       break;
     }
   }
