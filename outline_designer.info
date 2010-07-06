@@ -1,7 +1,4 @@
 name = Outline Designer
-description = Outline Designer is a powerful module that allows users to reorganize their site based on an Ajax book outline.  This makes much of the current book, menu, and block functionality more usable.
+description = a way of quickly building content outlines via books
 dependencies[] = book
-dependencies[] = thickbox
-dependencies[] = ajax
-dependencies[] = prepopulate
-core = 6.x
+core = "6.x"

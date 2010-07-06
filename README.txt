@@ -1,5 +1,5 @@
-ELMS: Outline Designer - Usability improvements for speedy outline creation in Drupal 6.x
-Copyright (C) 2008  The Pennsylvania State University
+ELMS: Outline Designer - Usability improvements for rapid book outline creation
+Copyright (C) 2008-2010  The Pennsylvania State University
 
 Bryan Ollendyke
 bto108@psu.edu
@@ -25,11 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 REQUIREMENTS
-*This module requires that you have Book enabled as well as the following contributed modules
-*Ajax forms -- http://drupal.org/project/ajax
-*Thickbox -- http://drupal.org/project/thickbox
-*Node Prepopulate -- http://drupal.org/project/prepopulate
-**Optional: TinyMCE with this module -- http://drupal.org/project/tinymce
+*This module requires that you have Book enabled, that's it!
 
 INSTALATION
 *Place the outline_designer directory in the correct modules folder as you would any other Drupal module
@@ -37,7 +33,6 @@ INSTALATION
 *Go to admin/content/book/outline_designer and configure your icons 
 *Go to admin/content/book/settings to enable / disable content types from outlining and set default type
 *Go to admin/content/book and click "edit order and titles" to access the outline designer interface.  
-**Optional: If using TinyMCE, make sure that the profile for it allows you to use Tiny on the admin/content/book* page. Otherwise you won't get the correct profile options for your user's view
 
 PERMISSIONS
 The outline designer is fully compatible with the permissions designated by your drupal site.
@@ -45,15 +40,11 @@ There is one permission that needs to be set called "access ajax path" this may 
 
 COMPATABILITY
 No known issues
-  *Firefox 3
-  *Safari 3
-  *Flock 1.2.6
-  *Camino 1.6.4
-  *SeaMonkey
-  *Netscape 9
-  *Chrome 1.0.154.48
-
-Known to not work at all
-  *Opera 9
-Limited Functionality (No context menu support at this time)
-  *IE (All versions)
+*Firefox 3+
+*Safari 5
+*Chrome (latest)
+Known Issues
+*IE 8 - Collapse / open doesn't work
+*Safari 4 - Minor reordering issue (sometimes doesn't register a drag correctly)
+*Opera 10 - Minor CSS / JS loadtime issues
+*IE 6/7 - JS error, doesn't work
