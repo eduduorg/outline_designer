@@ -1,0 +1,5 @@
+name = Outline Designer OG
+description = Let's group admins use Outline Designer for books in their group.
+dependencies[] = outline_designer
+dependencies[] = og
+core = "6.x"
