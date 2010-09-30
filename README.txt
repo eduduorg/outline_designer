@@ -10,41 +10,32 @@ kdb163@psu.edu
 12 Borland
 University Park, PA 16802
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along
-with this program; if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
 REQUIREMENTS
-*This module requires that you have Book enabled, that's it!
+*This module requires that you have Book enabled
+*The Organic Groups add on obviously requires og be installed
 
 INSTALATION
 *Place the outline_designer directory in the correct modules folder as you would any other Drupal module
 *Activate the module
 *Go to admin/content/book/outline_designer and configure your icons 
 *Go to admin/content/book/settings to enable / disable content types from outlining and set default type
-*Go to admin/content/book and click "edit order and titles" to access the outline designer interface.  
+*Go to admin/content/book and click "edit order and titles" to access the outline designer interface.
+
+OPTIONAL INSTALLATION
+*There is an organic groups integration helper module.  Activating it will add a "edit Books" tab to the group home page for group admins.  Group admins can now edit books owned by their group without needing the administer book privledge
 
 PERMISSIONS
-The outline designer is fully compatible with the permissions designated by your drupal site.
-There is one permission that needs to be set called "access ajax path" this may seem silly but is nessecary so that the path for submitting ajax requests is protected from the outside world.
+The outline designer is fully compatible with the permissions designated by your drupal site. To access the outline designer, make sure you have the administer book outlines permission or are an admin of the group that has books in it (og add-on only).
 
 COMPATABILITY
 No known issues
 *Firefox 3+
 *Safari 5
-*Chrome (latest)
-Known Issues
-*IE 8 - Collapse / open doesn't work
-*Safari 4 - Minor reordering issue (sometimes doesn't register a drag correctly)
-*Opera 10 - Minor CSS / JS loadtime issues
-*IE 6/7 - JS error, doesn't work
+*Chrome
+
+Some Issues
+*Opera 10 - Enter for rename submits / exits the page
+
+Major Issues
+*IE 8 - Rename works but doesn't update screen, outline refresh commits action but dissapears
+*IE 7 and lower - JS error on load and won't work
