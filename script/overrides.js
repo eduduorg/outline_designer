@@ -26,7 +26,7 @@
 	  }
 	  $.ajax({
 	  type: "POST",
-	  url: Drupal.settings.outline_designer.ajaxPath + "drag_drop/" + drag_nid + "/" + p_nid + "/" + weight,
+	  url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/drag_drop/" + drag_nid + "/" + p_nid + "/" + weight,
 	  success: function(msg){
 	  	//could implement some kind of history / undo list here if we want to
 			$("#reload_table").trigger('change');
@@ -153,7 +153,7 @@
 				  reweight_nid = this.id.replace('edit-table-book-admin-','').replace('-weight','');
 				  $.ajax({
 				  type: "POST",
-				  url: Drupal.settings.outline_designer.ajaxPath + "reweight/" + reweight_nid + "/" + this.value,
+				  url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/reweight/" + reweight_nid + "/" + this.value,
 				  success: function(msg){
 						//could implement some kind of history / undo list here if we want to
 						//enable this to get reweighting message support but it's annoying
