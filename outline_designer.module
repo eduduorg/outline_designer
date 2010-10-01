@@ -56,14 +56,14 @@ function _outline_designer_setup($nid, $ajax_path) {
 
   //Select only those that the book module say can be outlined
   $types_ary = variable_get('book_allowed_types', array('page'));
-
+	
   // Make sure default is allowed by this user.
-  if (user_access(_outline_designer_get_pstr('create', variable_get('book_child_type', 'book')))) {
+  if (node_access('create',variable_get('book_child_type', 'book'))) {
     $default_type = variable_get('book_child_type', 'book');
   }
   else {
     foreach ($types_ary as $current_type) {
-      if (user_access(_outline_designer_get_pstr('create', $current_type))) {
+      if (node_access('create',$current_type)) {
         $default_type = $current_type;
       }
     }
@@ -88,7 +88,7 @@ function _outline_designer_setup($nid, $ajax_path) {
     //ensure there is no permission escalation
     if (array_search($value['type'], $types_ary) === FALSE) {
     }
-    elseif (user_access(_outline_designer_get_pstr('create',  $value['type']))) {
+    elseif (node_access('create',$value['type'])) {
       $js_variables['types'][$value['type']] = array(
         $value['name'],
         variable_get("outline_designer_". $value['type'] ."_icon", drupal_get_path('module', 'outline_designer') ."/images/page.png"));
@@ -156,12 +156,12 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
     $types_ary = variable_get('book_allowed_types', array('page'));
 
     //make sure default is allowed by this user
-    if (user_access(_outline_designer_get_pstr('create', variable_get('book_child_type', 'book')))) {
+    if (node_access('create',variable_get('book_child_type', 'book'))) {
       $default_type = variable_get('book_child_type', 'book');
     }
     else {
       foreach ($types_ary as $current_type) {
-        if (user_access(_outline_designer_get_pstr('create', $current_type))) {
+        if (node_access('create',$current_type)) {
           $default_type = $current_type;
         }
       }
@@ -429,10 +429,14 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
       $node->book['module'] = $parent->book['module'];
       // Allow other modules to alter the new book node.
       drupal_alter('new_book_object', $node);
+			if (node_access('create', $node)) {
       node_save($node);
-
-      watchdog('content', '%type: added %title.', array('%type' => $node->type, '%title' => $node->title));
-      print $parent->book['mlid'] .';msg:'. $node->type .' added (nid:'. $node->nid .')';
+				watchdog('content', '%type: added %title.', array('%type' => $node->type, '%title' => $node->title));
+				print $parent->book['mlid'] .';msg:'. $node->type .' added (nid:'. $node->nid .')';
+			}
+			else {
+				print 0;
+			}
       break;
     //in: node id,  title
     //action: rename a single node
@@ -442,15 +446,7 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
       $newtitle = $var2;
       $newtitle = str_replace("@2@F@", '/', $newtitle);
       $node = node_load($nid);
-      if ($user->uid == $node->uid && user_access(_outline_designer_get_pstr('edit own', $node->type))) {
-        $node->log = "Outline Designer -- node renamed from ". $node->title ." to ". $newtitle;
-        watchdog('content', "Outline Designer -- node ". $nid ." renamed from ". $node->title ." to ". $newtitle);
-        print "Content renamed from ". $node->title ." to ". $newtitle ."(nid:$nid)";
-        $node->title = $newtitle;
-        $node->revision = 1;
-        node_save($node);
-      }
-      elseif (user_access(_outline_designer_get_pstr('edit any', $node->type))) {
+      if (node_access('update', $node)) {
         $node->log = "Outline Designer -- node renamed from ". $node->title ." to ". $newtitle;
         watchdog('content', "Outline Designer -- node ". $nid ." renamed from ". $node->title ." to ". $newtitle);
         print "Content renamed from ". $node->title ." to ". $newtitle ."(nid:$nid)";
@@ -479,13 +475,18 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
         $node->uid = $user->uid;
         $new_title = str_replace('@title', $node->title, $dup_title);
         $node->title = $new_title;
-        
-        node_save($node);
-        print 'Content duplicated (nid:'. $nid .')';
-        watchdog('content', '%type: duplicated %title from node '. $nid .'.', array('%type' => $node->type, '%title' => $node->title));
+        if (node_access('create', $node)) {
+          node_save($node);
+          print 'Content duplicated (nid:'. $nid .')';
+          watchdog('content', '%type: duplicated %title from node '. $nid .'.', array('%type' => $node->type, '%title' => $node->title));
+				}
+				else {
+					print 0;
+				}
       }
       //snag the whole branch if multiple == 1
       else {
+				$permission_fail = false;
         $nids = $nid;
         $map = array();
         $node = node_load($nid);
@@ -498,7 +499,6 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
         ORDER BY depth ASC", $mlid, $mlid, $mlid, $mlid, $mlid, $mlid, $mlid, $mlid);
         while ($value = db_fetch_array($result)) {
           $dup_node = node_load(str_replace('node/', '', $value['link_path']));
-          $nids .= ', '. $dup_node->nid;
           $current_nid = $dup_node->nid;
           $old_nid = $dup_node->nid;
           $dup_node->nid = NULL;
@@ -512,11 +512,22 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
           if (isset($map[$dup_node->book['plid']]) ) {
             $dup_node->book['plid'] = $map[$dup_node->book['plid']];
           }
-          node_save($dup_node);
-          $map[$old_mlid] = $dup_node->book['mlid'];
-          watchdog('content', '%type: duplicated %title from node '. $current_nid .'.', array('%type' => $dup_node->type, '%title' => $dup_node->title));
+					if (node_access('create', $dup_node)) {
+						node_save($dup_node);
+						$map[$old_mlid] = $dup_node->book['mlid'];
+						watchdog('content', '%type: duplicated %title from node '. $current_nid .'.', array('%type' => $dup_node->type, '%title' => $dup_node->title));
+						$nids .= ', '. $old_nid;
+					}
+					else {
+            $permission_fail = true;
+					}
         }
-        print 'Content duplicated (nids:'. $nids .')';
+				if ($permission_fail) {
+					print 0;
+				}
+				else {
+          print 'Content duplicated (nids:'. $nids .')';
+				}
       }
       break;
     //in: list of node ids to delete
@@ -527,11 +538,7 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
       $multiple = $var2;
       $node = node_load($nid);
       if ($multiple == 0) {
-        if ($user->uid == $node->uid && user_access(_outline_designer_get_pstr('delete own', $node->type))) {
-          print "Content deleted (nid:$nid)";
-          node_delete($nid);
-        }
-        elseif (user_access(_outline_designer_get_pstr('delete any', $node->type))) {
+        if (node_access('delete', $node)) {
           print "Content deleted (nid:$nid)";
           node_delete($nid);
         }
@@ -549,11 +556,7 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
         while ($value = db_fetch_array($result)) {
           $count++;
           $node = node_load(str_replace('node/', '', $value['link_path']));
-          if ($user->uid == $node->uid && user_access(_outline_designer_get_pstr('delete own', $node->type))) {
-            $del_count++;
-            node_delete($node->nid);
-          }
-          elseif (user_access(_outline_designer_get_pstr('delete any', $node->type))) {
+          if (node_access('delete', $node)) {
             $del_count++;
             node_delete($node->nid);
           }
@@ -576,15 +579,7 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
       $nid = $var1;
       $new_type = $var2;
       $node = node_load($nid);
-      if ($user->uid == $node->uid && user_access(_outline_designer_get_pstr('edit own', $node->type))) {
-        $log_msg = " Content Type changed from '". $node->type ."' to '$new_type'";
-        $node->log = "Outline Designer -- ". $log_msg;
-        $node->type = $new_type;
-        node_save($node);
-        watchdog('content', "Outline Designer -- ". $log_msg);
-        print $log_msg;
-      }
-      elseif (user_access(_outline_designer_get_pstr('edit any', $node->type))) {
+      if (node_access('update', $node)) {
         $log_msg = " Content Type changed from '". $node->type ."' to '$new_type'";
         $node->log = "Outline Designer -- ". $log_msg;
         $node->type = $new_type;
@@ -601,27 +596,7 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
   exit();
 }
 
-function _outline_designer_get_pstr($op,  $type) {
-  $term = 'content';
-  switch ($type) {
-    // Panels are a totally special case
-    case 'panel':
-      if ($op == 'create') {
-        return 'create panel-nodes';
-      }
-      elseif ($op == 'edit') {
-        return 'administer panel-nodes';
-      }
-      elseif ($op == 'edit own') {
-        return 'edit own panel-nodes';
-      }
-    break;
-    default:
-    break;
-  }
-  return ($op .' '. $type .' '. $term);
-}
-
+//used in validating that an icon upload is the correct size
 function _outline_designer_validate_image_resolution(&$file, $dimensions) {
   $errors = array();
   // Check first that the file is an image.
@@ -659,7 +634,7 @@ function outline_designer_suffix() {
     //ensure there is no permission escalation in type switching
     if (array_search($value['type'], $types_ary) === FALSE) {
     }
-    elseif (user_access(_outline_designer_get_pstr('create', $value['type']))) {
+    elseif (node_access('create',$value['type'])) {
       $count++;
       $typeoutput .= '<td><input type="radio" class="type_radio" name="content_type[]" value="'. $value['type'] .'"/> <img src="'. base_path() . variable_get("outline_designer_". $value['type'] ."_icon", drupal_get_path('module', 'outline_designer') ."/images/page.png") .'" />' . $value['name'] .'</td>';
       if ($count % 3 == 0) {
@@ -678,7 +653,6 @@ function outline_designer_suffix() {
       </div>
       <img src="'. base_path() . drupal_get_path('module', 'outline_designer') .'/images/close.png" class="od_cancel_button" />
     </div>
-    <div id="od_growl" align="center"></div>
     <div id="od_popup_toolbox">
       <div id="od_duplicate" class="od_uiscreen">
         <label class="option" for="od_duplicate_multiple">
