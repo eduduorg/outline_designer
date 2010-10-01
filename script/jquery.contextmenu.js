@@ -107,7 +107,8 @@
 		createMenu: function(menu,cmenu) {
 			var className = cmenu.className;
 			$.each(cmenu.theme.split(","),function(i,n){className+=' '+cmenu.themePrefix+n});
-			var $t = $('<table id="context_menu" cellspacing=0 cellpadding=0></table>').click(function(){cmenu.hide(); return false;}); // We wrap a table around it so width can be flexible
+			$('.context_menu_table').remove();
+			var $t = $('<table id="context_menu" class="context_menu_table" cellspacing=0 cellpadding=0></table>').click(function(){cmenu.hide(); return false;}); // We wrap a table around it so width can be flexible
 			var $tr = $('<tr></tr>');
 			var $td = $('<td></td>');
 			var $div = $('<div class="'+className+'"></div>');
@@ -129,7 +130,7 @@
 			if ( cmenu.useIframe ) {
 				$td.append(cmenu.createIframe());
 			}
-			$t.append($tr.append($td.append($div)))
+			$t.append($tr.append($td.append($div)));
 			return $t;
 		},
 		

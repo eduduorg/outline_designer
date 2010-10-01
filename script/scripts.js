@@ -28,7 +28,11 @@ Drupal.theme.tableDragChangedWarning = function () {
 /**
  * events to update interface
  */
- $(document).ready(function() {
+$(document).ready(function() {
+	//due to a previous glitch that loaded inefficiently, this will force it to only load once
+  $('#book-admin-edit').parent().attr('id','od-book-edit');
+	
+	//if everything's been told to close, close it all
 	if (Drupal.settings.outline_designer.collapseToggle == 1) {
 		Drupal.outline_designer.collapseAll();
 	}
@@ -131,7 +135,10 @@ Drupal.behaviors.outline_designer = function (context) {
   $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').css('display','none');
   });
   //if you hit enter, submit the title; if you hit esc then reset the field
-  $('#book-outline input').bind('keydown',function(e){
+	$('form').submit( function(){
+   return false;
+   } );
+  $('#book-outline input').keydown(function(e){
     if(document.all)e = event;
       if(e.keyCode==13){  // Enter pressed
       $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').css('display','');
@@ -146,12 +153,13 @@ Drupal.behaviors.outline_designer = function (context) {
       type: "POST",
       url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/rename/" + Drupal.settings.outline_designer.activeNid + "/" + title,
       success: function(msg){
+			$("#reload_table").trigger('change');
       if(msg == 0) {
-        $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').val($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html());
+        //$('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').val($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html());
           Drupal.outline_designer.growl("You don't have sufficient permissions to rename this node");
         }
         else {
-        $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').val());
+        //$('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').val());
         Drupal.outline_designer.growl(msg);
         }
       }
@@ -165,10 +173,8 @@ Drupal.behaviors.outline_designer = function (context) {
   $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').css('display','none');
       }
     });
-		
-  //bind the context menu and set it's properties
-  //binding isn't working in Opera / IE correctly or at all
-  var menu1 = [   
+		//bind the context menu and set it's properties
+	Drupal.settings.outline_designer.context_menu = [   
     {"Node":{icon: Drupal.settings.outline_designer.path +"images/node.png",disabled:true}}, 
     $.contextMenu.separator, 
     {"Add Content":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('add_content'); }, icon: Drupal.settings.outline_designer.path +"images/add_content.png", disabled:false } },
@@ -179,14 +185,14 @@ Drupal.behaviors.outline_designer = function (context) {
     {"Duplicate":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('duplicate'); }, icon: Drupal.settings.outline_designer.path +"images/duplicate.png", disabled:false  } },
     {"Change Type":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('change_type'); }, icon: Drupal.settings.outline_designer.path +"images/change_type.png", disabled:false } },
   ];
-    $('.outline_designer_edit_button').contextMenu(menu1,{theme: Drupal.settings.outline_designer.theme,
+  //binding isn't working in Opera / IE correctly or at all
+    $('.outline_designer_edit_button').contextMenu(Drupal.settings.outline_designer.context_menu,{theme: Drupal.settings.outline_designer.theme,
       beforeShow: function() {
         $(this.menu).find('.context-menu-item-inner:first').css('backgroundImage','url(' + $("#node-" + Drupal.settings.outline_designer.activeNid +"-icon").attr('src') +')').empty().append("nid " + Drupal.settings.outline_designer.activeNid);
       },
       useIframe:false,
       shadow:false,
     });
-  
 	//whenever the screen gets altered, make sure we close everything that should be
   Drupal.outline_designer.collapseInit();
 };
