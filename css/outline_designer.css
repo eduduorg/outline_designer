@@ -364,3 +364,11 @@
 #book-admin-edit .sticky-header {
 	display:none;
 }
+
+.ahah-progress-throbber {
+	float:left
+}
+.message {
+	float:left;
+	font-weight:bold;
+}
