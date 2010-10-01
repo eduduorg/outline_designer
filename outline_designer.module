@@ -108,7 +108,7 @@ function outline_designer_form_alter(&$form, $form_state, $form_id) {
 
 function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, $ajax_path) {
   $icon_path = base_path() . drupal_get_path('module', 'outline_designer') .'/images/';
-	_outline_designer_setup($form['#node']->nid, $ajax_path);
+  _outline_designer_setup($form['#node']->nid, $ajax_path);
   $form['ahah'] = array(
   '#type' => 'submit',
   '#id' => 'reload_table',
@@ -118,9 +118,13 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
   '#ahah' => array(
     'event' => 'change',
     'path' => $ajax_path . drupal_get_token() .'/reload_table/'. $form['#node']->nid,
-    'wrapper' => 'book-admin-edit',
+    'wrapper' => 'od-book-edit',
     'method' => 'replace',
     'effect' => 'none',
+    'progress' => array(
+        'type' => 'throbber',
+        'message' => t('Loading..'),
+      ),
     ),
   );
 
@@ -165,7 +169,39 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
     drupal_set_message(t('Books need to have at least one piece of content in them in order to work correctly with the outline designer'), 'error');
     drupal_goto('node/add/'. $default_type, 'parent='. $form['#node']->book['mlid'] .'&destination='. $_GET['q']);
   }
-  $form['table']['#prefix'] = '<fieldset class="collapsible"><div><div style="width:120px; float:left; height:30px; margin-right:0px;" class="context-menu context-menu-theme-'. variable_get('outline_designer_theme', 'vista') .'"><div title="Add Content" alt="Add Content" class="context-menu-item"><div style="background-image: url('. $icon_path .'add_content.png);" class="context-menu-item-inner" onclick="Drupal.settings.outline_designer.activeNid='. $form['#node']->nid .';Drupal.outline_designer.form_render('."'add_content'".');">Add Content</div></div></div><a href="#" onclick="Drupal.outline_designer.scale(-1);" class="od-operation-icons"><div style="height:30px; float:left;"><img alt="Decrease Interface" title="Decrease Interface" src="'. $icon_path .'text-decrease.png" /></a><a href="#" onclick="Drupal.outline_designer.scale(1);" class="od-operation-icons"><img alt="Increase Interface" title="Increase Interface" src="'. $icon_path .'text-increase.png" /></a><a href="#" onclick="Drupal.outline_designer.scale(0);" class="od-operation-icons"><img alt="Reset Interface" title="Reset Interface" src="'. $icon_path .'text-reset.png" /></a><a href="#" onclick="Drupal.outline_designer.openAll();"  class="od-operation-icons"><img alt="Open All Branches" title="Open All Branches" src="'. $icon_path .'open-all.png" /></a><a href="#" onclick="Drupal.outline_designer.collapseAll();" class="od-operation-icons"><img alt="Close All Branches" title="Close All Branches" src="'. $icon_path .'close-all.png" /></a></div></div></fieldset>';
+  $form['table']['#prefix'] = '
+  <fieldset class="collapsible">
+    <div>
+      <div style="width:120px; float:left; height:30px; margin-right:6px;" class="context-menu context-menu-theme-'. variable_get('outline_designer_theme', 'vista') .'">
+        <div title="Add Content" alt="Add Content" class="context-menu-item">
+          <div style="background-image: url('. $icon_path .'add_content.png);" class="context-menu-item-inner" onclick="Drupal.settings.outline_designer.activeNid='. $form['#node']->nid .';Drupal.outline_designer.form_render('."'add_content'".');">
+            Add Content
+          </div>
+        </div>
+      </div>
+      <div style="height:30px; float:left;">
+        <a href="#" onclick="Drupal.outline_designer.scale(-1);" class="od-operation-icons">
+          <img alt="Decrease Interface" title="Decrease Interface" src="'. $icon_path .'text-decrease.png" />
+        </a>
+        
+        <a href="#" onclick="Drupal.outline_designer.scale(1);" class="od-operation-icons">
+          <img alt="Increase Interface" title="Increase Interface" src="'. $icon_path .'text-increase.png" />
+        </a>
+        
+        <a href="#" onclick="Drupal.outline_designer.scale(0);" class="od-operation-icons">
+          <img alt="Reset Interface" title="Reset Interface" src="'. $icon_path .'text-reset.png" />
+        </a>
+        
+        <a href="#" onclick="Drupal.outline_designer.openAll();"  class="od-operation-icons">
+          <img alt="Open All Branches" title="Open All Branches" src="'. $icon_path .'open-all.png" />
+        </a>
+        
+        <a href="#" onclick="Drupal.outline_designer.collapseAll();" class="od-operation-icons">
+          <img alt="Close All Branches" title="Close All Branches" src="'. $icon_path .'close-all.png" />
+        </a>
+      </div>
+    </div>
+  </fieldset>';
 }
 
 /**
@@ -369,7 +405,6 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
     case 'reload_table':
       $nid = $var1;
       module_load_include('inc', 'book', 'book.admin');
-      //$form_state = array('storage' => '', 'submitted' => '', 'post' => array());
       $output = drupal_get_form('book_admin_edit', node_load($nid));
       drupal_json(array('status' => TRUE, 'data' => $output));
       break;
@@ -611,8 +646,7 @@ function _outline_designer_validate_image_resolution(&$file, $dimensions) {
   }
 
 /**
- * TODO ADD documentation here + think of a better function name now that we're
- * not implementing hook_footer.
+ * Suffix adds the info to tak on the edn of the form
  */
 function outline_designer_suffix() {
   //Select only those that the book module say can be outlined
@@ -643,7 +677,7 @@ function outline_designer_suffix() {
         <input type="button" name="Save" value="Save" class="od_submit_button" />
       </div>
       <img src="'. base_path() . drupal_get_path('module', 'outline_designer') .'/images/close.png" class="od_cancel_button" />
-		</div>
+    </div>
     <div id="od_growl" align="center"></div>
     <div id="od_popup_toolbox">
       <div id="od_duplicate" class="od_uiscreen">

@@ -32,10 +32,8 @@ No known issues
 *Firefox 3+
 *Safari 5
 *Chrome
-
-Some Issues
-*Opera 10 - Enter for rename submits / exits the page
+*Opera 10
+*IE 8
 
 Major Issues
-*IE 8 - Rename works but doesn't update screen, outline refresh commits action but dissapears
 *IE 7 and lower - JS error on load and won't work
