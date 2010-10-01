@@ -25,7 +25,7 @@
  * @todo More themes
  * @todo Nested context menus
  */
-;(function($){
+  (function ($) {
 	$.contextMenu = {
 		shadow:true,
 		shadowOffset:0,
@@ -33,7 +33,7 @@
 		shadowOffsetY:5,
 		shadowWidthAdjust:-3,
 		shadowHeightAdjust:-3,
-		shadowOpacity:.2,
+		shadowOpacity: .2,
 		shadowClass:'context-menu-shadow',
 		shadowColor:'black',
 
@@ -73,11 +73,11 @@
 			var cmenu = $.extend({},this,opts); // Clone all default properties to created object
 			
 			// If a selector has been passed in, then use that as the menu
-			if (typeof menu=="string") {
+			if (typeof menu === "string") {
 				cmenu.menu = $(menu);
 			} 
 			// If a function has been passed in, call it each time the menu is shown to create the menu
-			else if (typeof menu=="function") {
+			else if (typeof menu === "function") {
 				cmenu.menuFunction = menu;
 			}
 			// Otherwise parse the Array passed in
@@ -106,24 +106,32 @@
 		// Accept an Array representing a menu structure and turn it into HTML
 		createMenu: function(menu,cmenu) {
 			var className = cmenu.className;
-			$.each(cmenu.theme.split(","),function(i,n){className+=' '+cmenu.themePrefix+n});
+			$.each(cmenu.theme.split(","), function (i,n) {
+				className +=' ' + cmenu.themePrefix + n;
+				}
+			);
 			$('.context_menu_table').remove();
-			var $t = $('<table id="context_menu" class="context_menu_table" cellspacing=0 cellpadding=0></table>').click(function(){cmenu.hide(); return false;}); // We wrap a table around it so width can be flexible
+			var $t = $('<table id="context_menu" class="context_menu_table" cellspacing=0 cellpadding=0></table>').click( function () {
+				cmenu.hide();
+				return false;
+			}); // We wrap a table around it so width can be flexible
 			var $tr = $('<tr></tr>');
 			var $td = $('<td></td>');
-			var $div = $('<div class="'+className+'"></div>');
+			var $div = $('<div class="' + className + '"></div>');
 			
 			// Each menu item is specified as either:
 			//     title:function
 			// or  title: { property:value ... }
-			for (var i=0; i<menu.length; i++) {
+			for (var i=0; i<menu.length; i+1) {
 				var m = menu[i];
-				if (m==$.contextMenu.separator) {
+				if (m === $.contextMenu.separator) {
 					$div.append(cmenu.createSeparator());
 				}
 				else {
 					for (var opt in menu[i]) {
-						$div.append(cmenu.createMenuItem(opt,menu[i][opt])); // Extracted to method for extensibility
+						if (opt !== null) {
+						 $div.append(cmenu.createMenuItem(opt,menu[i][opt])); // Extracted to method for extensibility
+						}
 					}
 				}
 			}
@@ -137,7 +145,7 @@
 		// Create an individual menu item
 		createMenuItem: function(label,obj) {
 			var cmenu = this;
-			if (typeof obj=="function") { obj={onclick:obj}; } // If passed a simple function, turn it into a property of an object
+			if (typeof obj === "function") { obj = {onclick:obj}; } // If passed a simple function, turn it into a property of an object
 			// Default properties, extended in case properties are passed
 			var o = $.extend({
 				onclick:function() { },
@@ -151,13 +159,14 @@
 			},obj);
 			// If an icon is specified, hard-code the background-image style. Themes that don't show images should take this into account in their CSS
 			var iconStyle = (o.icon)?'background-image:url('+o.icon+');':'';
-			var $div = $('<div class="'+cmenu.itemClassName+' '+o.className+((o.disabled)?' '+cmenu.disabledItemClassName:'')+'" title="'+o.title+'"></div>')
-							// If the item is disabled, don't do anything when it is clicked
-							.click(function(e){if(cmenu.isItemDisabled(this)){return false;}else{return o.onclick.call(cmenu.target,this,cmenu,e)}})
-							// Change the class of the item when hovered over
-							.hover( function(){ o.hoverItem.call(this,(cmenu.isItemDisabled(this))?cmenu.disabledItemHoverClassName:o.hoverClassName); }
-									,function(){ o.hoverItemOut.call(this,(cmenu.isItemDisabled(this))?cmenu.disabledItemHoverClassName:o.hoverClassName); }
-							);
+			var $div = $('<div class="'+cmenu.itemClassName+' '+o.className+((o.disabled)?' '+cmenu.disabledItemClassName:'')+'" title="'+o.title+'"></div>').click(function (e) {
+								if (cmenu.isItemDisabled(this)) {
+									return false;
+								}
+								else {
+									return o.onclick.call(cmenu.target,this,cmenu,e);
+								}
+							}).hover( function(){ o.hoverItem.call(this,(cmenu.isItemDisabled(this))?cmenu.disabledItemHoverClassName:o.hoverClassName); },function(){ o.hoverItemOut.call(this,(cmenu.isItemDisabled(this))?cmenu.disabledItemHoverClassName:o.hoverClassName); });
 			var $idiv = $('<div class="'+cmenu.innerDivClassName+'" style="'+iconStyle+'">'+label+'</div>');
 			$div.append($idiv);
 			return $div;
@@ -220,14 +229,14 @@
 				}
 				$c.css( {top:pos.y+"px", left:pos.x+"px", position:"absolute",zIndex:9999} )[cmenu.showTransition](cmenu.showSpeed,((cmenu.showCallback)?function(){cmenu.showCallback.call(cmenu);}:null));
 				cmenu.shown=true;
-				$(document).one('click',null,function(){cmenu.hide()}); // Handle a single click to the document to hide the menu
+				$(document).one('click',null,function(){cmenu.hide();}); // Handle a single click to the document to hide the menu
 			}
 		},
 		
 		// Find the position where the menu should appear, given an x,y of the click event
 		getPosition: function(clickX,clickY,cmenu,e) {
 			var x = clickX+cmenu.offsetX;
-			var y = clickY+cmenu.offsetY
+			var y = clickY+cmenu.offsetY;
 			var h = $(cmenu.menu).height();
 			var w = $(cmenu.menu).width();
 			var dir = cmenu.direction;
@@ -235,11 +244,11 @@
 				var $w = $(window);
 				var wh = $w.height();
 				var ww = $w.width();
-				if (dir=="down" && (y+h-$w.scrollTop() > wh)) { dir = "up"; }
+				if (dir==="down" && (y+h-$w.scrollTop() > wh)) { dir = "up"; }
 				var maxRight = x+w-$w.scrollLeft();
 				if (maxRight > ww) { x -= (maxRight-ww); }
 			}
-			if (dir=="up") { y -= h; }
+			if (dir==="up") { y -= h; }
 			return {'x':x,'y':y};
 		},
 		
