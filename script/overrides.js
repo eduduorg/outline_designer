@@ -12,11 +12,11 @@
     var weight = $("#edit-table-book-admin-"+ drag_nid +"-weight").val();
     var active_indent = Math.max($('.indentation', row_obj).size());
     //if we're at level 0 then the node is at the book root
-    if(active_indent !== 0){
+    if(active_indent != 0){
     var tmp_indent = -1;
     var tmp_obj = row_obj;
     //keep walking backwards until we find the node we need
-    while (tmp_indent !== (active_indent-1) ) {
+    while (tmp_indent != (active_indent-1) ) {
       tmp_obj = $(tmp_obj).prev();
       tmp_indent = Math.max($('.indentation', tmp_obj).size());
     }
@@ -49,17 +49,17 @@
 		var nextRow = '';
 		var useSibling = '';
     // Set the row as it's own target.
-    if (rowSettings.relationship === 'self' || rowSettings.relationship === 'group') {
+    if (rowSettings.relationship == 'self' || rowSettings.relationship == 'group') {
      sourceRow = changedRow;
     }
     // Siblings are easy, check previous and next rows.
-    else if (rowSettings.relationship === 'sibling') {
+    else if (rowSettings.relationship == 'sibling') {
     previousRow = $(changedRow).prev('tr').get(0);
     nextRow = $(changedRow).next('tr').get(0);
     sourceRow = changedRow;
     if ($(previousRow).is('.draggable') && $('.' + group, previousRow).length) {
       if (this.indentEnabled) {
-      if ($('.indentations', previousRow).size() === $('.indentations', changedRow)) {
+      if ($('.indentations', previousRow).size() == $('.indentations', changedRow)) {
         sourceRow = previousRow;
       }
       }
@@ -69,7 +69,7 @@
     }
     else if ($(nextRow).is('.draggable') && $('.' + group, nextRow).length) {
       if (this.indentEnabled) {
-      if ($('.indentations', nextRow).size() === $('.indentations', changedRow)) {
+      if ($('.indentations', nextRow).size() == $('.indentations', changedRow)) {
         sourceRow = nextRow;
       }
       }
@@ -80,7 +80,7 @@
     }
     // Parents, look up the tree until we find a field not in this group.
     // Go up as many parents as indentations in the changed row.
-    else if (rowSettings.relationship === 'parent') {
+    else if (rowSettings.relationship == 'parent') {
     previousRow = $(changedRow).prev('tr');
     while (previousRow.length && $('.indentation', previousRow).length >= this.rowObject.indents) {
       previousRow = previousRow.prev('tr');
@@ -96,7 +96,7 @@
       // be at the root level. Find the first item, then compare this row
       // against it as a sibling.
       sourceRow = $('tr.draggable:first').get(0);
-      if (sourceRow === this.rowObject.element) {
+      if (sourceRow == this.rowObject.element) {
       sourceRow = $(this.rowObject.group[this.rowObject.group.length - 1]).next('tr.draggable').get(0);
       }
       useSibling = true;
@@ -152,7 +152,7 @@
         else {
           this.value = maxVal;
         }
-        if(tmpVal !== this.value) {
+        if(tmpVal != this.value) {
           reweight_nid = this.id.replace('edit-table-book-admin-','').replace('-weight','');
           $.ajax({
           type: "POST",
@@ -168,7 +168,7 @@
       }
       else {
         // Assume a numeric input field.
-        var weight = (parseInt($(targetClass, siblings[0]).val()) || 0);
+        var weight = parseInt($(targetClass, siblings[0]).val()) || 0;
         $(targetClass, siblings).each(function() {
           this.value = weight;
           weight = weight + 1;

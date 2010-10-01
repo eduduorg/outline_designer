@@ -34,14 +34,14 @@ $(document).ready(function() {
   $('#book-admin-edit').parent().attr('id','od-book-edit');
   $('body').append('<div id="od_growl" align="center"></div>');
   //if everything's been told to close, close it all
-  if (Drupal.settings.outline_designer.collapseToggle === 1) {
+  if (Drupal.settings.outline_designer.collapseToggle == 1) {
     Drupal.outline_designer.collapseAll();
   }
   document.onkeyup = function(e) {
     if(document.all) {
 			e = event;
 		}
-    if(e.keyCode===27){  // ESC pressed
+    if(e.keyCode==27){  // ESC pressed
       Drupal.outline_designer.ui_reset();
     }
   };
@@ -85,7 +85,7 @@ Drupal.behaviors.outlineDesignerEscapeOverlay = function (context) {
     if(document.all) {
 			e = event;
 		}
-    if(e.keyCode===13){  // Enter pressed
+    if(e.keyCode == 13){  // Enter pressed
     Drupal.outline_designer.form_submit(Drupal.settings.outline_designer.activeAction);
     return false;
     }
@@ -98,7 +98,7 @@ Drupal.behaviors.outlineDesignerEscapeOverlay = function (context) {
 Drupal.behaviors.outline_designer = function (context) {
   //collapse / expand functionality
   $('.od-toggle-open').bind('click', function(e){
-    if ($(this).attr('alt') === 'open') {
+    if ($(this).attr('alt') == 'open') {
       $(this).attr('alt','closed');
       $(this).attr('src',$(this).attr('src').replace('images/open.png','images/closed.png'));
       Drupal.settings.outline_designer.collapseList.push($(this).attr('id'));
@@ -119,7 +119,7 @@ Drupal.behaviors.outline_designer = function (context) {
     
   });
   $("tr.draggable td").each(function(i){
-    if((i+1) % 6 === 0 || (i+1) % 6 === 4 || (i+1) % 6 === 5) {
+    if((i+1) % 6 == 0 || (i+1) % 6 == 4 || (i+1) % 6 == 5) {
     this.style.display = 'none';
     }
   });  
@@ -147,10 +147,10 @@ Drupal.behaviors.outline_designer = function (context) {
     if(document.all) {
 			e = event;
 		}
-      if(e.keyCode===13){  // Enter pressed
+      if(e.keyCode==13){  // Enter pressed
       $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').css('display','');
   $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').css('display','none');
-  if ($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html() !== $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').val()) {
+  if ($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html() != $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').val()) {
     var ser = $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').serialize();
     var pattern = new RegExp("%5Btitle%5D=");
     pattern.test(ser);
@@ -161,7 +161,7 @@ Drupal.behaviors.outline_designer = function (context) {
       url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/rename/" + Drupal.settings.outline_designer.activeNid + "/" + title,
       success: function(msg){
         $("#reload_table").trigger('change');
-        if(msg === 0) {
+        if(msg == 0) {
           Drupal.outline_designer.growl("You don't have sufficient permissions!");
         }
         else {
@@ -172,7 +172,7 @@ Drupal.behaviors.outline_designer = function (context) {
   }
       return false;
       }  
-      if(e.keyCode === 27){  // ESC pressed
+      if(e.keyCode == 27){  // ESC pressed
       $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').css('display','');
   $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').val($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html());
   $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').css('display','none');
@@ -191,10 +191,8 @@ Drupal.behaviors.outline_designer = function (context) {
     {"Change Type":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('change_type'); }, icon: Drupal.settings.outline_designer.path +"images/change_type.png", disabled:false } }
   ];
   //binding isn't working in Opera / IE correctly or at all
-    $('.outline_designer_edit_button').contextMenu(Drupal.settings.outline_designer.context_menu, {
-			theme: Drupal.settings.outline_designer.theme,
-      beforeShow: function () {
-        $(this.menu).find('.context-menu-item-inner:first').css('backgroundImage','url(' + $("#node-" + Drupal.settings.outline_designer.activeNid +"-icon").attr('src') +')').empty().append("nid " + Drupal.settings.outline_designer.activeNid);
+    $('.outline_designer_edit_button').contextMenu(Drupal.settings.outline_designer.context_menu, {theme: Drupal.settings.outline_designer.theme,
+      beforeShow: function () { $(this.menu).find('.context-menu-item-inner:first').css('backgroundImage','url(' + $("#node-" + Drupal.settings.outline_designer.activeNid +"-icon").attr('src') +')').empty().append("nid " + Drupal.settings.outline_designer.activeNid);
       },
       useIframe: false,
       shadow: false
@@ -220,22 +218,22 @@ Drupal.outline_designer.form_render = function(render_item) {
     break;
     //do this for the rest
     default:
-      if (render_item === 'change_type') {
+      if (render_item == 'change_type') {
         $(".od_submit_button").val('Change Type');
       }
-      else if (render_item === 'duplicate') {
+      else if (render_item == 'duplicate') {
         $(".od_submit_button").val('Duplicate');
       }
-      else if (render_item === 'add_content') {
+      else if (render_item == 'add_content') {
         $(".od_submit_button").val('Add Content');
       }
-      else if (render_item === 'delete') {
+      else if (render_item == 'delete') {
         $(".od_submit_button").val('Delete');
       }
       var output = '';
       output+= '<img src="'+ Drupal.settings.outline_designer.path +"images/"+ render_item +".png" +'" class="od_statusbar_img" />';
       output+= render_item.charAt(0).toUpperCase() + render_item.slice(1).replace('_',' ');
-      if (render_item !== 'add_content') {
+      if (render_item != 'add_content') {
         if (Drupal.outline_designer.get_active_title().length > 20) {
           title = Drupal.outline_designer.get_active_title().substring(0,20) +'...';
         }
@@ -251,16 +249,16 @@ Drupal.outline_designer.form_render = function(render_item) {
       $('#od_popup .popup-statusbar').html(output);
       $('#od_popup_overlay').css('display','block');
       $('#od_popup').css('display','block');
-      if (render_item === 'add_content') {
+      if (render_item == 'add_content') {
         $("#od_add_content input.type_radio").val([Drupal.settings.outline_designer.defaultType]);
         $("#od_add_content_title").focus();
         Drupal.settings.outline_designer.activeType = Drupal.settings.outline_designer.defaultType;
       }
-      else if (render_item === 'change_type') {
+      else if (render_item == 'change_type') {
         $("#od_change_type input.type_radio").val([Drupal.outline_designer.get_active_type()]);
       Drupal.settings.outline_designer.activeType = Drupal.outline_designer.get_active_type();
       }
-      else if (render_item === 'duplicate') {
+      else if (render_item == 'duplicate') {
         $("#od_duplicate_title").focus();
       }
     break;
@@ -276,7 +274,7 @@ Drupal.outline_designer.form_submit = function(submit_item) {
       pattern.test(ser);
       var title = RegExp.rightContext;
       title = title.replace(/%2F/g,"@2@F@");
-      if (title === "") {
+      if (title == "") {
         alert(Drupal.t("You must enter a title in order to submit a new node!"));
         return false;
       }
@@ -288,11 +286,11 @@ Drupal.outline_designer.form_submit = function(submit_item) {
             var msg_split = new RegExp(";msg:");
             msg_split.test(msg);
             msg = RegExp.rightContext;
-            if ($.inArray('collapse-'+ Drupal.settings.outline_designer.activeNid, Drupal.settings.outline_designer.collapseList) !== -1) {
+            if ($.inArray('collapse-'+ Drupal.settings.outline_designer.activeNid, Drupal.settings.outline_designer.collapseList) != -1) {
               Drupal.settings.outline_designer.collapseList.splice($.inArray('collapse-'+ Drupal.settings.outline_designer.activeNid, Drupal.settings.outline_designer.collapseList), 1);
             }
             $("#reload_table").trigger('change');
-            if(msg === 0) {
+            if(msg == 0) {
               Drupal.outline_designer.growl("You don't have sufficient permissions!");
             }
             else {
@@ -309,7 +307,7 @@ Drupal.outline_designer.form_submit = function(submit_item) {
     url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/delete/" + Drupal.settings.outline_designer.activeNid + "/" + multiple,
     success: function(msg){
       $("#reload_table").trigger('change');
-      if(msg === 0) {
+      if(msg == 0) {
         Drupal.outline_designer.growl("You don't have sufficient permissions!");
       }
       else {
@@ -326,7 +324,7 @@ Drupal.outline_designer.form_submit = function(submit_item) {
         url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/duplicate/" + Drupal.settings.outline_designer.activeNid + "/" + $('#od_duplicate_multiple:checked').length + "/" + dup_title,
         success: function(msg){
           $("#reload_table").trigger('change');
-          if(msg === 0) {
+          if(msg == 0) {
             Drupal.outline_designer.growl("You don't have sufficient permissions!");
           }
           else {
@@ -340,7 +338,7 @@ Drupal.outline_designer.form_submit = function(submit_item) {
         type: "POST",
         url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/change_type/" + Drupal.settings.outline_designer.activeNid + '/' + Drupal.settings.outline_designer.activeType,
         success: function(msg){
-          if(msg === 0) {
+          if(msg == 0) {
 						Drupal.outline_designer.growl("You don't have sufficient permissions!");
 					}
 					else {
@@ -392,18 +390,18 @@ Drupal.outline_designer.get_active_type = function() {
 
 //scaling functionality
 Drupal.outline_designer.scale = function(scale){
-  if(scale === 1 && Drupal.settings.outline_designer.factor !== 2){
+  if(scale == 1 && Drupal.settings.outline_designer.factor != 2){
   Drupal.settings.outline_designer.factor = Drupal.settings.outline_designer.factor + 0.25;
-  }else if(scale === -1 && Drupal.settings.outline_designer.factor !== 1){
+  }else if(scale == -1 && Drupal.settings.outline_designer.factor != 1){
     Drupal.settings.outline_designer.factor = Drupal.settings.outline_designer.factor - 0.25;
-  }else if(scale === 0){
+  }else if(scale == 0){
     Drupal.settings.outline_designer.factor = 1;
   }
   //account for initial page load, stupid IE thing
-  if(Drupal.settings.outline_designer.factor === null && scale === -2) {
+  if(Drupal.settings.outline_designer.factor == null && scale == -2) {
     Drupal.settings.outline_designer.factor = 1;
   }
-  if(Drupal.settings.outline_designer.factor === 1){
+  if(Drupal.settings.outline_designer.factor == 1){
     $("#book-outline img").css('width','').css('height','');
     $("#book-outline").css('font-size','');
     $("#book-outline .form-item").css('margin-top','');
@@ -422,13 +420,13 @@ Drupal.outline_designer.toggle_expand = function(obj,state) {
     tmpobj = tmpobj.next();
     traveldepth = tmpobj.children().children('div.indentation').size();
     if (depth < traveldepth) {
-      if(state === 'closed') {
+      if(state == 'closed') {
         tmpobj.css('display','none');
       }
       else {
         tmpobj.css('display','block');
         //if something's marked closed we want to flip that to open too to make things easier. Init is then run after the fact to make sure everything's closed that should be
-        if (tmpobj.children().children('img.od-toggle-open').attr('alt') === 'closed') {
+        if (tmpobj.children().children('img.od-toggle-open').attr('alt') == 'closed') {
           tmpobj.children().children('img.od-toggle-open').attr('alt','open');
           tmpobj.children().children('img.od-toggle-open').attr('src',tmpobj.children().children('img.od-toggle-open').attr('src').replace('images/closed.png','images/open.png'));
         }
@@ -440,7 +438,7 @@ Drupal.outline_designer.toggle_expand = function(obj,state) {
 //everything will get returned as open by default so go through and collapse things that have been collapsed
 Drupal.outline_designer.collapseInit = function() {
   for(var i in Drupal.settings.outline_designer.collapseList) {
-    if ($('#'+ Drupal.settings.outline_designer.collapseList[i]).length === 1) {
+    if ($('#'+ Drupal.settings.outline_designer.collapseList[i]).length == 1) {
       $('#'+ Drupal.settings.outline_designer.collapseList[i]).attr('alt','closed');
       $('#'+ Drupal.settings.outline_designer.collapseList[i]).attr('src',$('#'+ Drupal.settings.outline_designer.collapseList[i]).attr('src').replace('images/open.png','images/closed.png'));
       Drupal.outline_designer.toggle_expand($('#'+ Drupal.settings.outline_designer.collapseList[i]).parent().parent(),$('#'+ Drupal.settings.outline_designer.collapseList[i]).attr('alt'));
@@ -456,7 +454,7 @@ Drupal.outline_designer.collapseAll = function() {
     $(this).attr('alt','closed');
     $(this).attr('src',$(this).attr('src').replace('images/open.png','images/closed.png'));
     //only push if it's not in the list already
-    if ($.inArray($(this).attr('id'), Drupal.settings.outline_designer.collapseList) === -1) {
+    if ($.inArray($(this).attr('id'), Drupal.settings.outline_designer.collapseList) == -1) {
       Drupal.settings.outline_designer.collapseList.push($(this).attr('id'));
     }
     Drupal.outline_designer.toggle_expand($(this).parent().parent(),$(this).attr('alt'));

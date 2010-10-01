@@ -73,11 +73,11 @@
 			var cmenu = $.extend({},this,opts); // Clone all default properties to created object
 			
 			// If a selector has been passed in, then use that as the menu
-			if (typeof menu === "string") {
+			if (typeof menu == "string") {
 				cmenu.menu = $(menu);
 			} 
 			// If a function has been passed in, call it each time the menu is shown to create the menu
-			else if (typeof menu === "function") {
+			else if (typeof menu == "function") {
 				cmenu.menuFunction = menu;
 			}
 			// Otherwise parse the Array passed in
@@ -107,7 +107,7 @@
 		createMenu: function(menu,cmenu) {
 			var className = cmenu.className;
 			$.each(cmenu.theme.split(","), function (i,n) {
-				className +=' ' + cmenu.themePrefix + n;
+				className+= ' ' + cmenu.themePrefix + n;
 				}
 			);
 			$('.context_menu_table').remove();
@@ -122,16 +122,14 @@
 			// Each menu item is specified as either:
 			//     title:function
 			// or  title: { property:value ... }
-			for (var i=0; i<menu.length; i+1) {
+			for (var i=0; i<menu.length; i++) {
 				var m = menu[i];
-				if (m === $.contextMenu.separator) {
+				if (m == $.contextMenu.separator) {
 					$div.append(cmenu.createSeparator());
 				}
 				else {
 					for (var opt in menu[i]) {
-						if (opt !== null) {
 						 $div.append(cmenu.createMenuItem(opt,menu[i][opt])); // Extracted to method for extensibility
-						}
 					}
 				}
 			}
@@ -145,7 +143,7 @@
 		// Create an individual menu item
 		createMenuItem: function(label,obj) {
 			var cmenu = this;
-			if (typeof obj === "function") { obj = {onclick:obj}; } // If passed a simple function, turn it into a property of an object
+			if (typeof obj == "function") { obj = {onclick:obj}; } // If passed a simple function, turn it into a property of an object
 			// Default properties, extended in case properties are passed
 			var o = $.extend({
 				onclick:function() { },
@@ -158,7 +156,7 @@
 				hoverItemOut:cmenu.hoverItemOut
 			},obj);
 			// If an icon is specified, hard-code the background-image style. Themes that don't show images should take this into account in their CSS
-			var iconStyle = (o.icon)?'background-image:url('+o.icon+');':'';
+			var iconStyle = (o.icon) ? 'background-image:url('+o.icon+');' : '';
 			var $div = $('<div class="'+cmenu.itemClassName+' '+o.className+((o.disabled)?' '+cmenu.disabledItemClassName:'')+'" title="'+o.title+'"></div>').click(function (e) {
 								if (cmenu.isItemDisabled(this)) {
 									return false;
@@ -166,7 +164,7 @@
 								else {
 									return o.onclick.call(cmenu.target,this,cmenu,e);
 								}
-							}).hover( function(){ o.hoverItem.call(this,(cmenu.isItemDisabled(this))?cmenu.disabledItemHoverClassName:o.hoverClassName); },function(){ o.hoverItemOut.call(this,(cmenu.isItemDisabled(this))?cmenu.disabledItemHoverClassName:o.hoverClassName); });
+							}).hover( function(){ o.hoverItem.call(this,(cmenu.isItemDisabled(this)) ? cmenu.disabledItemHoverClassName : o.hoverClassName); },function(){ o.hoverItemOut.call(this,(cmenu.isItemDisabled(this))?cmenu.disabledItemHoverClassName:o.hoverClassName); });
 			var $idiv = $('<div class="'+cmenu.innerDivClassName+'" style="'+iconStyle+'">'+label+'</div>');
 			$div.append($idiv);
 			return $div;
@@ -211,7 +209,7 @@
 		show: function(t,e) {
 			var cmenu=this, x=e.pageX, y=e.pageY;
 			cmenu.target = t; // Preserve the object that triggered this context menu so menu item click methods can see it
-			if (cmenu.beforeShow()!==false) {
+			if (cmenu.beforeShow()!=false) {
 				// If the menu content is a function, call it to populate the menu each time it is displayed
 				if (cmenu.menuFunction) {
 					if (cmenu.menu) { $(cmenu.menu).remove(); }
@@ -244,11 +242,11 @@
 				var $w = $(window);
 				var wh = $w.height();
 				var ww = $w.width();
-				if (dir==="down" && (y+h-$w.scrollTop() > wh)) { dir = "up"; }
+				if (dir=="down" && (y+h-$w.scrollTop() > wh)) { dir = "up"; }
 				var maxRight = x+w-$w.scrollLeft();
 				if (maxRight > ww) { x -= (maxRight-ww); }
 			}
-			if (dir==="up") { y -= h; }
+			if (dir=="up") { y -= h; }
 			return {'x':x,'y':y};
 		},
 		
