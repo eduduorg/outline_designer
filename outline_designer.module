@@ -56,14 +56,14 @@ function _outline_designer_setup($nid, $ajax_path) {
 
   //Select only those that the book module say can be outlined
   $types_ary = variable_get('book_allowed_types', array('page'));
-	
+
   // Make sure default is allowed by this user.
-  if (node_access('create',variable_get('book_child_type', 'book'))) {
+  if (node_access('create', variable_get('book_child_type', 'book'))) {
     $default_type = variable_get('book_child_type', 'book');
   }
   else {
     foreach ($types_ary as $current_type) {
-      if (node_access('create',$current_type)) {
+      if (node_access('create', $current_type)) {
         $default_type = $current_type;
       }
     }
@@ -88,7 +88,7 @@ function _outline_designer_setup($nid, $ajax_path) {
     //ensure there is no permission escalation
     if (array_search($value['type'], $types_ary) === FALSE) {
     }
-    elseif (node_access('create',$value['type'])) {
+    elseif (node_access('create', $value['type'])) {
       $js_variables['types'][$value['type']] = array(
         $value['name'],
         variable_get("outline_designer_". $value['type'] ."_icon", drupal_get_path('module', 'outline_designer') ."/images/page.png"));
@@ -156,12 +156,12 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
     $types_ary = variable_get('book_allowed_types', array('page'));
 
     //make sure default is allowed by this user
-    if (node_access('create',variable_get('book_child_type', 'book'))) {
+    if (node_access('create', variable_get('book_child_type', 'book'))) {
       $default_type = variable_get('book_child_type', 'book');
     }
     else {
       foreach ($types_ary as $current_type) {
-        if (node_access('create',$current_type)) {
+        if (node_access('create', $current_type)) {
           $default_type = $current_type;
         }
       }
@@ -183,19 +183,15 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
         <a href="#" onclick="Drupal.outline_designer.scale(-1);" class="od-operation-icons">
           <img alt="Decrease Interface" title="Decrease Interface" src="'. $icon_path .'text-decrease.png" />
         </a>
-        
         <a href="#" onclick="Drupal.outline_designer.scale(1);" class="od-operation-icons">
           <img alt="Increase Interface" title="Increase Interface" src="'. $icon_path .'text-increase.png" />
         </a>
-        
         <a href="#" onclick="Drupal.outline_designer.scale(0);" class="od-operation-icons">
           <img alt="Reset Interface" title="Reset Interface" src="'. $icon_path .'text-reset.png" />
         </a>
-        
         <a href="#" onclick="Drupal.outline_designer.openAll();"  class="od-operation-icons">
           <img alt="Open All Branches" title="Open All Branches" src="'. $icon_path .'open-all.png" />
         </a>
-        
         <a href="#" onclick="Drupal.outline_designer.collapseAll();" class="od-operation-icons">
           <img alt="Close All Branches" title="Close All Branches" src="'. $icon_path .'close-all.png" />
         </a>
@@ -243,12 +239,10 @@ function _outline_designer_settings_redirect() {
  */
 function _outline_designer_settings($form_state) {
   //build out a list of the packaged icons
-  $packaged_icons = 'Outline Designer Icons: ';
-  $icons = array('page', 'story', 'folder', 'link', 'node', 'add_content', 'edit', 'delete', 'duplicate', 'rename', 'change_type', 'settings', 'save');
+  $icons = array('add_content', 'change_type', 'close', 'delete', 'duplicate', 'edit', 'folder', 'link', 'node', 'page', 'rename', 'save', 'settings', 'story', 'view');
   foreach ($icons as $title) {
     $packaged_icons .='<img src="'. base_path() . drupal_get_path('module', 'outline_designer') .'/images/'. $title .'.png" title="'. $title .'" alt="'. $title .'" hspace="2px" />';
   }
-  $packaged_icons .=' <br />Uploaded Icons: ';
   //create it juuuust incase and make sure it's writable
   $dir = file_create_path(file_directory_path() .'/outline_designer');
   file_check_directory($dir,  1);
@@ -256,55 +250,84 @@ function _outline_designer_settings($form_state) {
   if ($handle = opendir('./'. file_directory_path() .'/outline_designer')) {
     while (FALSE !== ($file = readdir($handle))) {
       if ($file != "." && $file != "..") {
-        $packaged_icons .='<img src="'. base_path() . file_directory_path() .'/outline_designer/'. $file .'" title="'. $file .'" alt="'. $file .'" hspace="2px" />';
+        $uploaded_icons .='<img src="'. base_path() . file_directory_path() .'/outline_designer/'. $file .'" title="'. $file .'" alt="'. $file .'" hspace="2px" />';
       }
     }
     closedir($handle);
   }
   //collapse default state
-  $form["outline_designer_theme"] = array(
-      '#type' => 'select',
-      '#title' => t("Menu Theme"),
-      '#default_value' => variable_get('outline_designer_theme', 'vista'),
-      '#options' => array('vista' => 'Vista', 'xp' => 'XP', 'human' => 'Human', 'osx' => 'OS X'),
-      '#description' => 'Theme to use on context menus',
-      '#required' => TRUE,
+  $form["ui"] = array(
+    '#type' => 'fieldset',
+    '#title' => t('User Interface'),
+    '#collapsed' => FALSE,
+    '#collapsible' => TRUE,
+  );
+  $form["ui"]["outline_designer_theme"] = array(
+    '#type' => 'select',
+    '#title' => t("Menu Theme"),
+    '#default_value' => variable_get('outline_designer_theme', 'vista'),
+    '#options' => array('vista' => 'Vista', 'xp' => 'XP', 'human' => 'Human', 'osx' => 'OS X'),
+    '#description' => 'Theme for the outline designer menu system',
+    '#required' => TRUE,
   );
 
   //collapse default state
-  $form["outline_designer_collapse_toggle"] = array(
-      '#type' => 'checkbox',
-      '#title' => t("Collapse items by default?"),
-      '#default_value' => variable_get('outline_designer_collapse_toggle', 1),
-      '#description' => 'When the outline renders, should it collapse all nested items by default?  This can help when working with larger book structures.',
-      '#required' => FALSE,
+  $form["ui"]["outline_designer_collapse_toggle"] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Collapse nested content by default?"),
+    '#default_value' => variable_get('outline_designer_collapse_toggle', 1),
+    '#description' => 'This is helpful when working with large book structures.',
+    '#required' => FALSE,
   );
-  //hidden space to throw out the icons before the rest of the content
-  $form["outline_designer_hidden"] = array(
-    '#type' => 'hidden',
-    '#title' => 'Available icons',
-    '#suffix' => $packaged_icons,
+  //icons
+  $form["packaged_icons"] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Packaged Icons'),
+    '#collapsed' => FALSE,
+    '#collapsible' => TRUE,
   );
-  $content_types = array();
+  $form["packaged_icons"]["packaged"] = array(
+    '#type' => 'markup',
+    '#title' => 'packaged',
+    '#value' => $packaged_icons,
+  );
+  $form["uploaded_icons"] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Uploaded Icons'),
+    '#collapsed' => FALSE,
+    '#collapsible' => TRUE,
+  );
+  $form["uploaded_icons"]["uploaded"] = array(
+    '#type' => 'markup',
+    '#value' => $uploaded_icons,
+  );
   $result = db_query("SELECT type, name FROM {node_type}");
+  $types_ary = variable_get('book_allowed_types', array('page'));
   while ($value = db_fetch_array($result)) {
-    array_push($content_types, t($value['type']));
-    //create a textfield incase they want to enter an icon that way
-    $form["outline_designer_". $value['type'] ."_icon_link"] = array(
-      '#type' => 'textfield',
-      '#title' => t("Link to ". $value['name'] ." Icon"),
-      '#default_value' => variable_get("outline_designer_". $value['type'] ."_icon",  drupal_get_path('module', 'outline_designer') ."/images/page.png"),
-      '#description' => '<img src="'. base_path() . variable_get("outline_designer_". $value['type'] ."_icon", drupal_get_path('module', 'outline_designer') ."/images/page.png") .'" /> '. t("You can drag the icons from above onto this field to get the full path or add a path of your own."),
-      '#required' => FALSE,
+    //only show types that are allowed
+    if (in_array($value['type'], $types_ary)) {
+      //create a textfield incase they want to enter an icon that way
+      $form["outline_designer_". $value['type']] = array(
+        '#type' => 'fieldset',
+        '#title' => '<img src="'. base_path() . variable_get("outline_designer_". $value['type'] ."_icon", drupal_get_path('module', 'outline_designer') ."/images/page.png") .'" style="display:inline !important" /> '. $value['name'],
+        '#collapsed' => TRUE,
+        '#collapsible' => TRUE,
+        '#description' => t("This icon will be associated to the content type in book outlines. The icon must be 16x16, unless an <a href=@toolkit>image toolkit</a> is installed, and in jpg, gif or png format.", array('@toolkit' => url('admin/settings/image-toolkit'))),
       );
-    //Create a upload field for each content type so icons can be added for them
-    $form["outline_designer_". $value['type'] ."_icon"] = array(
-      '#type' => 'file',
-      '#size' => '10',
-      '#title' => t("Icon for ". $value['name']),
-      '#description' => t("This icon will be associated with the %type-name content type in the outline designer. The icon must be 16x16, unless an <a href=@toolkit>image toolkit</a> is installed, and in jpg, gif or png format.", array('%type-name' => $value['type'], '@toolkit' => url('admin/settings/image-toolkit'))),
-      '#required' => FALSE,
-    );
+      $form["outline_designer_". $value['type']]["outline_designer_". $value['type'] ."_icon_link"] = array(
+        '#type' => 'textfield',
+        '#title' => t("Icon Path"),
+        '#default_value' => variable_get("outline_designer_". $value['type'] ."_icon",  drupal_get_path('module', 'outline_designer') ."/images/page.png"),
+        '#required' => FALSE,
+        );
+      //Create a upload field for each content type so icons can be added for them
+      $form["outline_designer_". $value['type']]["outline_designer_". $value['type'] ."_icon"] = array(
+        '#type' => 'file',
+        '#size' => '10',
+        '#title' => t("Upload Icon"),
+        '#required' => FALSE,
+      );
+    }
   }
   $form['#attributes'] = array('enctype' => "multipart/form-data");
   $form['submit'] = array('#type' => 'submit', '#value' => t('Save'));
@@ -316,6 +339,7 @@ function _outline_designer_settings($form_state) {
 function _outline_designer_settings_submit($form, &$form_state) {
   //store the checkbox value
   variable_set('outline_designer_collapse_toggle', $form_state['values']["outline_designer_collapse_toggle"]);
+	//store theme selected
   variable_set('outline_designer_theme', $form_state['values']["outline_designer_theme"]);
 
   //the rest is for files
@@ -335,7 +359,7 @@ function _outline_designer_settings_submit($form, &$form_state) {
       }
       else {
         //this is the case when there is no image uploaded to associate the textfield icon to the icon page to use,  this will allow for references to icons already used
-        $icon = $form_state['values']["outline_designer_". $value['type'] ."_icon_link"];
+        $icon = check_plain($form_state['values']["outline_designer_". $value['type'] ."_icon_link"]);
         $base_path = base_path();
         //pull off the site name if it was included
         if ($base_path != '/' && $base_path != '') {
@@ -429,14 +453,14 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
       $node->book['module'] = $parent->book['module'];
       // Allow other modules to alter the new book node.
       drupal_alter('new_book_object', $node);
-			if (node_access('create', $node)) {
+      if (node_access('create', $node)) {
       node_save($node);
-				watchdog('content', '%type: added %title.', array('%type' => $node->type, '%title' => $node->title));
-				print $parent->book['mlid'] .';msg:'. $node->type .' added (nid:'. $node->nid .')';
-			}
-			else {
-				print 0;
-			}
+        watchdog('content', '%type: added %title.', array('%type' => $node->type, '%title' => $node->title));
+        print $parent->book['mlid'] .';msg:'. $node->type .' added (nid:'. $node->nid .')';
+      }
+      else {
+        print 0;
+      }
       break;
     //in: node id,  title
     //action: rename a single node
@@ -479,14 +503,14 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
           node_save($node);
           print 'Content duplicated (nid:'. $nid .')';
           watchdog('content', '%type: duplicated %title from node '. $nid .'.', array('%type' => $node->type, '%title' => $node->title));
-				}
-				else {
-					print 0;
-				}
+        }
+        else {
+          print 0;
+        }
       }
       //snag the whole branch if multiple == 1
       else {
-				$permission_fail = false;
+        $permission_fail = FALSE;
         $nids = $nid;
         $map = array();
         $node = node_load($nid);
@@ -512,22 +536,22 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
           if (isset($map[$dup_node->book['plid']]) ) {
             $dup_node->book['plid'] = $map[$dup_node->book['plid']];
           }
-					if (node_access('create', $dup_node)) {
-						node_save($dup_node);
-						$map[$old_mlid] = $dup_node->book['mlid'];
-						watchdog('content', '%type: duplicated %title from node '. $current_nid .'.', array('%type' => $dup_node->type, '%title' => $dup_node->title));
-						$nids .= ', '. $old_nid;
-					}
-					else {
-            $permission_fail = true;
-					}
+          if (node_access('create', $dup_node)) {
+            node_save($dup_node);
+            $map[$old_mlid] = $dup_node->book['mlid'];
+            watchdog('content', '%type: duplicated %title from node '. $current_nid .'.', array('%type' => $dup_node->type, '%title' => $dup_node->title));
+            $nids .= ', '. $old_nid;
+          }
+          else {
+            $permission_fail = TRUE;
+          }
         }
-				if ($permission_fail) {
-					print 0;
-				}
-				else {
+        if ($permission_fail) {
+          print 0;
+        }
+        else {
           print 'Content duplicated (nids:'. $nids .')';
-				}
+        }
       }
       break;
     //in: list of node ids to delete
@@ -634,7 +658,7 @@ function outline_designer_suffix() {
     //ensure there is no permission escalation in type switching
     if (array_search($value['type'], $types_ary) === FALSE) {
     }
-    elseif (node_access('create',$value['type'])) {
+    elseif (node_access('create', $value['type'])) {
       $count++;
       $typeoutput .= '<td><input type="radio" class="type_radio" name="content_type[]" value="'. $value['type'] .'"/> <img src="'. base_path() . variable_get("outline_designer_". $value['type'] ."_icon", drupal_get_path('module', 'outline_designer') ."/images/page.png") .'" />' . $value['name'] .'</td>';
       if ($count % 3 == 0) {
