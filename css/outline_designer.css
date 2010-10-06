@@ -70,6 +70,24 @@
 #book-outline {
   min-width:inherit;
   width:100%;
+	float:left;
+}
+#book-outline tr td div.form-item{
+	float:left;
+}
+#book-outline tr{
+	width:98%;
+	margin:0px;
+	padding-left:1%;
+	padding-right:1%;
+	border-bottom:1px solid #DDDDDD;
+	border-top:none;
+}
+#book-outline tr td {
+	border:none;
+}
+#od-book-edit {
+	margin:0px;
 }
 #book-outline .tableHeader-processed {
   display:none;
