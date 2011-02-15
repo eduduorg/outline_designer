@@ -1,4 +1,5 @@
 name = Outline Designer
-description = a way of quickly building content outlines via books
+description = Usability improvements to the core-optional Book module that allows the rapid building of content outlines.
 dependencies[] = book
+package = Outline Designer
 core = "6.x"

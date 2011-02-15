@@ -1,5 +1,5 @@
 ELMS: Outline Designer - Usability improvements for rapid book outline creation
-Copyright (C) 2008-2010  The Pennsylvania State University
+Copyright (C) 2008-2011  The Pennsylvania State University
 
 Bryan Ollendyke
 bto108@psu.edu
@@ -12,20 +12,31 @@ University Park, PA 16802
 
 REQUIREMENTS
 *This module requires that you have Book enabled
-*The Organic Groups add on obviously requires og be installed
+*The Organic Groups add on requires og be installed
 
 INSTALLATION
 *Place the outline_designer directory in the correct modules folder as you would any other Drupal module
 *Activate the module
-*Go to admin/content/book/outline_designer and configure your icons 
+*Activate the sub-modules (outline_child_pages is highly recommended though it is optional)
+*Go to admin/content/book/outline_designer and configure your icons
 *Go to admin/content/book/settings to enable / disable content types from outlining and set default type
 *Go to admin/content/book and click "edit order and titles" to access the outline designer interface.
 
 OPTIONAL INSTALLATION
 *There is an organic groups integration helper module.  Activating it will add a "edit Books" tab to the group home page for group admins.  Group admins can now edit books owned by their group without needing the administer book privilege
+*There is an outline child pages module added as of 1.3.  Outline Child Pages can add either a tab or link to nodes that have child pages, allowing you to use the outline designer to reorder JUST the children of the current node.  This can have great benefit when attempting to outline large book structures when you only want to focus on a part of the outline.  Additionally, this module can be used to give users the ability to outline book content that they own by checking that they have the new permission, and can add content to books, and have the ability to update the current node.
 
 PERMISSIONS
-The outline designer is fully compatible with the permissions designated by your drupal site. To access the outline designer, make sure you have the administer book outlines permission or are an admin of the group that has books in it (og add-on only).
+The outline designer is fully compatible with the permissions designated by your Drupal site. To access outline designer:
+
+By itself -- Requires 'admin book outlines' permission
+w/ outline_designer_ok -- requires admin book outlines OR that you are a group admin
+w/ outline_child_pages -- requires admin book outline OR that you are a group admin OR that you have the following three permissions combined:
+** new 'outline own pages' permission
+** 'add content to books' permission
+** have access to update / edit the node you are currently viewing
+
+If you meet those three criteria you will be allowed to use the outline designer (though it will still check for permissions on each action as it always does)
 
 COMPATIBILITY
 No known issues
