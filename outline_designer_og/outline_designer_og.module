@@ -1,5 +1,5 @@
 <?php
-
+// $Id: outline_designer_og.module
 /**
  * Implementation of hook_form_alter().
  */
@@ -14,7 +14,7 @@ function outline_designer_og_form_alter(&$form, $form_state, $form_id) {
  */
 function outline_designer_og_menu() {
   $items['node/%node/outline_designer'] = array(
-    'title' => 'Edit books',
+    'title' => t('Edit books'),
     'page callback' => 'outline_designer_og_books',
     'page arguments' => array(1),
     'access callback' => '_outline_designer_og_books_access',
@@ -23,7 +23,7 @@ function outline_designer_og_menu() {
     'type' => MENU_LOCAL_TASK,
   );
   $items['outline_designer/book/%node'] = array(
-    'title' => 'Re-order book pages and change titles',
+    'title' => t('Re-order book pages and change titles'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('book_admin_edit', 2),
     'access callback' => '_outline_designer_og_book_access',
@@ -105,7 +105,6 @@ function _outline_designer_og_book_access($node) {
       $is_group_admin = TRUE;
     }
   }
-
   return $is_group_admin;
 }
 

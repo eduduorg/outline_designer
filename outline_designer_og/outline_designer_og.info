@@ -1,5 +1,6 @@
-name = Outline Designer OG
-description = Let's group admins use Outline Designer for books in their group.
+name = Organic Groups Integration
+description = Allows group admins to use Outline Designer for books in their group.
 dependencies[] = outline_designer
 dependencies[] = og
+package = Outline Designer
 core = "6.x"

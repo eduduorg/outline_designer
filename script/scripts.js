@@ -23,7 +23,7 @@ Drupal.outline_designer = Drupal.outline_designer || { functions: {} };
  * Get rid of tabledrag messages about needing to save
  */ 
 Drupal.theme.tableDragChangedWarning = function () { 
-  return ' '; 
+  return '<div></div>';
 };
   
 /**
@@ -179,20 +179,37 @@ Drupal.behaviors.outline_designer = function (context) {
       }
     });
     //bind the context menu and set it's properties
-  Drupal.settings.outline_designer.context_menu = [   
-    {"Node":{icon: Drupal.settings.outline_designer.path +"images/node.png",disabled:true}}, 
-    $.contextMenu.separator, 
-    {"Add Content":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('add_content'); }, icon: Drupal.settings.outline_designer.path +"images/add_content.png", disabled:false } },
-    {"Rename":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('rename'); }, icon: Drupal.settings.outline_designer.path +"images/rename.png", disabled:false  } },
-    {"Edit":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('edit'); }, icon: Drupal.settings.outline_designer.path +"images/edit.png", disabled:false  } },
-    {"View":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('view'); }, icon: Drupal.settings.outline_designer.path +"images/view.png", disabled:false } },
-    {"Delete":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('delete'); }, icon: Drupal.settings.outline_designer.path +"images/delete.png", disabled:false } }, 
-    {"Duplicate":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('duplicate'); }, icon: Drupal.settings.outline_designer.path +"images/duplicate.png", disabled:false  } },
-    {"Change Type":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('change_type'); }, icon: Drupal.settings.outline_designer.path +"images/change_type.png", disabled:false } }
-  ];
+  var unavailableContextMenuItems = Drupal.settings.outline_designer.unavailableContextMenuItems;
+  Drupal.settings.outline_designer.context_menu = [];
+  if ($.inArray("nid", unavailableContextMenuItems) == -1) {  
+      Drupal.settings.outline_designer.context_menu.push({"Node":{icon: Drupal.settings.outline_designer.path +"images/node.png",disabled:true}},$.contextMenu.separator);
+  }
+
+  if ($.inArray("add_content", unavailableContextMenuItems) == -1) {
+      Drupal.settings.outline_designer.context_menu.push({"Add Content":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('add_content'); }, icon: Drupal.settings.outline_designer.path +"images/add_content.png", disabled:false } });
+  }
+  if ($.inArray("rename", unavailableContextMenuItems) == -1) {
+      Drupal.settings.outline_designer.context_menu.push({"Rename":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('rename'); }, icon: Drupal.settings.outline_designer.path +"images/rename.png", disabled:false  } });
+  }
+  if ($.inArray("edit", unavailableContextMenuItems) == -1) {
+      Drupal.settings.outline_designer.context_menu.push({"Edit":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('edit'); }, icon: Drupal.settings.outline_designer.path +"images/edit.png", disabled:false  } });
+  }
+  if ($.inArray("view", unavailableContextMenuItems) == -1) {
+      Drupal.settings.outline_designer.context_menu.push({"View":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('view'); }, icon: Drupal.settings.outline_designer.path +"images/view.png", disabled:false } });
+  }
+  if ($.inArray("delete", unavailableContextMenuItems) == -1) {
+      Drupal.settings.outline_designer.context_menu.push({"Delete":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('delete'); }, icon: Drupal.settings.outline_designer.path +"images/delete.png", disabled:false } });
+  }
+  if ($.inArray("duplicate", unavailableContextMenuItems) == -1) {
+      Drupal.settings.outline_designer.context_menu.push({"Duplicate":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('duplicate'); }, icon: Drupal.settings.outline_designer.path +"images/duplicate.png", disabled:false  } });
+  }
+  if ($.inArray("change_type", unavailableContextMenuItems) == -1) {
+      Drupal.settings.outline_designer.context_menu.push({"Change Type":{ onclick:function(menuItem,menu) { Drupal.outline_designer.form_render('change_type'); }, icon: Drupal.settings.outline_designer.path +"images/change_type.png", disabled:false } });
+  }
+
   //binding isn't working in Opera / IE correctly or at all
     $('.outline_designer_edit_button').contextMenu(Drupal.settings.outline_designer.context_menu, {theme: Drupal.settings.outline_designer.theme,
-      beforeShow: function () { $(this.menu).find('.context-menu-item-inner:first').css('backgroundImage','url(' + $("#node-" + Drupal.settings.outline_designer.activeNid +"-icon").attr('src') +')').empty().append("nid " + Drupal.settings.outline_designer.activeNid);
+												   beforeShow: function () { if ($.inArray("nid", unavailableContextMenuItems) == -1) { $(this.menu).find('.context-menu-item-inner:first').css('backgroundImage','url(' + $("#node-" + Drupal.settings.outline_designer.activeNid +"-icon").attr('src') +')').empty().append("nid " + Drupal.settings.outline_designer.activeNid);}
       },
       useIframe: false,
       shadow: false
