@@ -45,11 +45,13 @@ function outline_child_pages_menu() {
 }
 
 /**
- *
+ * check to make sure they can access the ajax path, doesn't mean it'll commit their operation, just that it'll load
+ * this also has optional integration with the book manager module
+ * so that people could use the advantages of both modules and not need 'outline own pages' permissions
  */
 function _outline_child_pages_ajax_access() {
 	global $user;
-  	return $user->uid == 1 || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books'));
+  	return $user->uid == 1 || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books')) || user_access('add content to personal books');
 }
 
 /**
