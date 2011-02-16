@@ -439,7 +439,7 @@ function _outline_designer_settings_submit($form, &$form_state) {
   variable_set('outline_designer_collapse_toggle', $form_state['values']["outline_designer_collapse_toggle"]);
 	//store theme selected
   variable_set('outline_designer_theme', $form_state['values']["outline_designer_theme"]);
-  //take into account rearrange child pages
+  //take into account outline child pages
   if (module_exists('outline_child_pages')) {
     variable_set('outline_child_pages_type', $form_state['values']["outline_child_pages_type"]);
   }
@@ -553,7 +553,10 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
       $title = $var1;
       $type = $var2;
       $parent_nid = $var3;
+	  //need to account for the 3 weird characters in URLs
       $title = str_replace("@2@F@", '/', $title);
+	  $title = str_replace("@2@3@", '#', $title);
+	  $title = str_replace("@2@B@", '+', $title);
       //set the node
       $node->title = $title;
       $node->type = $type;
@@ -567,7 +570,7 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
       $node->book['module'] = $parent->book['module'];
       // Allow other modules to alter the new book node.
       drupal_alter('new_book_object', $node);
-      if (node_access('create', $node) && node_access('update', $parent)) {
+      if (node_access('create', $node)) {
         node_save($node);
         watchdog('content', '%type: added %title.', array('%type' => $node->type, '%title' => $node->title));
         print $parent->book['mlid'] .';msg:'. t('%type added (nid: %nid)', array('%type' => $node->type, '%nid' => $node->nid));
@@ -582,7 +585,10 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
     case 'rename':
       $nid = $var1;
       $newtitle = $var2;
+	  //need to account for the 3 weird characters in URLs
       $newtitle = str_replace("@2@F@", '/', $newtitle);
+	  $newtitle = str_replace("@2@3@", '#', $newtitle);
+	  $newtitle = str_replace("@2@B@", '+', $newtitle);
       $node = node_load($nid);
       if (node_access('update', $node)) {
         $node->log = t("Outline Designer -- node renamed from %title to %newtitle", array('%title' => $node->title, '%newtitle' => $newtitle));
@@ -603,6 +609,10 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
       $nid = $var1;
       $multiple = $var2;
       $dup_title = $var3;
+	  //need to account for the 3 weird characters in URLs
+      $dup_title = str_replace("@2@F@", '/', $dup_title);
+	  $dup_title = str_replace("@2@3@", '#', $dup_title);
+	  $dup_title = str_replace("@2@B@", '+', $dup_title);
       //only duplicate 1 item
       if ($multiple == 0) {
         $node = node_load($nid);
@@ -612,6 +622,7 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
         $node->book['mlid'] = NULL;
         $node->book['has_children'] = 0;
         $node->uid = $user->uid;
+		//swap out the title
         $new_title = str_replace('@title', $node->title, $dup_title);
         $node->title = $new_title;
         if (node_access('create', $node) && node_access('view', $orig_node)) {
@@ -646,6 +657,7 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
 		  $dup_node->path = NULL;
           $dup_node->uid = $user->uid;
           $dup_node->revision = 1;
+          //swap out the title
           $dup_node->title = str_replace('@title', $dup_node->title, $dup_title);
           $old_mlid = $dup_node->book['mlid'];
           $dup_node->book['mlid'] = NULL;
@@ -783,6 +795,53 @@ function outline_designer_suffix() {
     }
   }
   $typeoutput .= '</tr></table>';
+  $duplicate_form['od_duplicate_number'] = array(
+    '#title' => t('How many copies would you like?'),
+	'#type' => 'select',
+	'#id' => 'od_duplicate_number',
+	'#description' => t('Duplicates will be performed one at a time to avoid load issues'),
+	'#options' => array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15),
+	'#required' => TRUE,
+	'#default_value' => 1,
+	'#weight' => 0,
+  );
+  $duplicate_form['od_duplicate_multiple'] = array(
+   '#title' => t('Duplicate Hierarchy'),
+   '#id' => 'od_duplicate_multiple',
+   '#type' => 'checkbox',
+   '#attributes' => array('checked' => 'checked'),
+   '#description' => t('If checked, the current content and all child pages will be duplicated'),
+   '#weight' => 1,
+  );
+  $duplicate_form['od_duplicate_title'] = array(
+   '#title' => t('Title format'),
+   '#id' => 'od_duplicate_title',
+   '#type' => 'textfield',
+   '#required' => TRUE,
+   '#size' => 20,
+   '#description' => t('Tokens: @title = content title; @i = duplicate number'),
+   '#weight' => 2,
+  );
+  //delete form
+  $delete_form['od_delete_multiple'] = array(
+   '#title' => t('Delete Hierarchy'),
+   '#id' => 'od_delete_multiple',
+   '#type' => 'checkbox',
+   '#description' => t('Warning: This action cannot be undone.'),
+   '#weight' => 0,
+  );  
+  //add form
+  $add_form['od_add_content_title'] = array(
+   '#title' => t('Title'),
+   '#id' => 'od_add_content_title',
+   '#type' => 'textfield',
+   '#required' => TRUE,
+   '#size' => 20,
+   '#description' => t('Make sure you edit content after creation if it has "required fields"
+'),
+   '#weight' => 0,
+   '#suffix' => $typeoutput,
+  );
   return '
     <div id="od_popup_overlay"></div>
     <div id="od_popup" class="context-menu context-menu-theme-'. variable_get('outline_designer_theme', 'vista') .'">
@@ -795,26 +854,17 @@ function outline_designer_suffix() {
     </div>
     <div id="od_popup_toolbox">
       <div id="od_duplicate" class="od_uiscreen">
-        <label class="option" for="od_duplicate_multiple">
-        <input type="checkbox" id="od_duplicate_multiple" /> '. t('Duplicate hierarchy') .'
-        </label>
-        <br /><br />
-        '. t('How should the new title be formed?') .'
-        <input type="textfield" id="od_duplicate_title" value="@title (Copy)" />
+        '. drupal_render($duplicate_form) .'
       </div>
       <div id="od_delete" class="od_uiscreen">
-        <label class="option" for="od_delete_multiple">
-        <input type="checkbox" id="od_delete_multiple" /> '. t('Delete hierarchy') .'
-         </label>
+        '. drupal_render($delete_form) .'
       </div>
       <div id="od_change_type" class="od_uiscreen">
-      <strong>'. t('Changing content types can have undesirable effects') .'</strong>
+	  <div class="description">'. t('Warning: Changing content types can have undesirable effects') .'</div>
       '. $typeoutput .'
       </div>
       <div id="od_add_content" class="od_uiscreen">
-          <strong>'. t('Title'). ': </strong>
-          <input size="30" type="text" id="od_add_content_title" name="od_add_content_title">
-          '. $typeoutput .'
+          '. drupal_render($add_form) .'
       </div>
     </div>';
 }
