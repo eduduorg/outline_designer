@@ -266,7 +266,6 @@ JPSpan_Serialize.prototype = {
     }
 }
 
-// $Id$
 function JPSpan_Util_Data() {
     this.Serialize = new JPSpan_Serialize(this);
     this.indent = '';
