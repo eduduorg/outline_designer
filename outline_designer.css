@@ -19,10 +19,13 @@
 /*
  * Outline designer specific buttons / system
  */
+<<<<<<< HEAD
 #od_delete_node, #od_duplicate_node {
   display:none;
 }
  
+=======
+>>>>>>> b47909a96524336200790b408c737b9e758ab0b3
 .outline_designer_edit_button{
   margin: 2px 5px;
   float:left;
@@ -34,9 +37,13 @@
   width:50%;
   left:25%;
   text-align:center;
+<<<<<<< HEAD
   z-index:100000;
   background-color:#000000;
   color:#CCCCCC;
+=======
+  z-index:10000;
+>>>>>>> b47909a96524336200790b408c737b9e758ab0b3
 }
 #od_add_child{
   display:none;

@@ -38,7 +38,11 @@
   text-align:left;
  }
  #od_popup .popup-content {
+<<<<<<< HEAD
    padding:0px 10px 10px 10px;
+=======
+   padding:10px;
+>>>>>>> b47909a96524336200790b408c737b9e758ab0b3
    text-align:left;
  }
  #od_popup .popup-content img {

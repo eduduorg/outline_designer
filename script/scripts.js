@@ -159,6 +159,10 @@ Drupal.behaviors.outline_designer = function (context) {
 	title = title.replace(/%2F/g,"@2@F@"); //weird escape for ajax with /
 	title = title.replace(/%23/g,"@2@3@"); //weird escape for ajax with #
 	title = title.replace(/%2B/g,"@2@B@"); //weird escape for ajax with +
+<<<<<<< HEAD
+=======
+	title = title.replace(/%26/g,"@2@6@"); // Fix ampersand issue &
+>>>>>>> b47909a96524336200790b408c737b9e758ab0b3
     $.ajax({
       type: "POST",
       url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/rename/" + Drupal.settings.outline_designer.activeNid + "/" + title,
