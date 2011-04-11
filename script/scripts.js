@@ -151,11 +151,15 @@ Drupal.behaviors.outline_designer = function (context) {
       $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').css('display','');
   $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').css('display','none');
   if ($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html() != $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').val()) {
-    var ser = $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').serialize();
-    var pattern = new RegExp("%5Btitle%5D=");
-    pattern.test(ser);
-    var title = RegExp.rightContext;
-    title = title.replace(/%2F/g,"@2@F@");
+    var title = $.param($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title'));
+	var titleary = title.split('=',1);
+	//need to remove the name space
+	title = title.replace(titleary,'');
+	title = title.substr(1);
+	title = title.replace(/%2F/g,"@2@F@"); //weird escape for ajax with /
+	title = title.replace(/%23/g,"@2@3@"); //weird escape for ajax with #
+	title = title.replace(/%2B/g,"@2@B@"); //weird escape for ajax with +
+	title = title.replace(/%26/g,"@2@6@"); // Fix ampersand issue &
     $.ajax({
       type: "POST",
       url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/rename/" + Drupal.settings.outline_designer.activeNid + "/" + title,
@@ -239,6 +243,7 @@ Drupal.outline_designer.form_render = function(render_item) {
         $(".od_submit_button").val('Change Type');
       }
       else if (render_item == 'duplicate') {
+		$("#od_duplicate_title").val("@title");
         $(".od_submit_button").val('Duplicate');
       }
       else if (render_item == 'add_content') {
@@ -286,13 +291,13 @@ Drupal.outline_designer.form_render = function(render_item) {
 Drupal.outline_designer.form_submit = function(submit_item) {
   switch (submit_item) {
     case 'add_content':
-      var ser = $("#od_add_content_title").serialize();
-      var pattern = new RegExp("od_add_content_title=");
-      pattern.test(ser);
-      var title = RegExp.rightContext;
-      title = title.replace(/%2F/g,"@2@F@");
+      var title = $.param($("#od_add_content_title"));
+	  title = title.replace(/%2F/g,"@2@F@"); //weird escape for ajax with /
+	  title = title.replace(/%23/g,"@2@3@"); //weird escape for ajax with #
+	  title = title.replace(/%2B/g,"@2@B@"); //weird escape for ajax with +
+	  title = title.substr(1);
       if (title == "") {
-        alert(Drupal.t("You must enter a title in order to submit a new node!"));
+        alert(Drupal.t("You must enter a title in order to add content!"));
         return false;
       }
       else {
@@ -308,7 +313,7 @@ Drupal.outline_designer.form_submit = function(submit_item) {
             }
             $("#reload_table").trigger('change');
             if(msg == 0) {
-              Drupal.outline_designer.growl("You don't have sufficient permissions!");
+              Drupal.outline_designer.growl("You don't have permissions to add this content");
             }
             else {
               Drupal.outline_designer.growl(msg);
@@ -334,13 +339,19 @@ Drupal.outline_designer.form_submit = function(submit_item) {
   });  
     break;
     case 'duplicate':
-      var dup_title = $("#od_duplicate_title").val();
-      dup_title = dup_title.replace(/%2F/g,"@2@F@");
-      $.ajax({
+	  var dup_title = $.param($("#od_duplicate_title"));
+	  dup_title = dup_title.replace(/%2F/g,"@2@F@"); //weird escape for ajax with /
+	  dup_title = dup_title.replace(/%23/g,"@2@3@"); //weird escape for ajax with #
+	  dup_title = dup_title.replace(/%2B/g,"@2@B@"); //weird escape for ajax with +
+	  dup_title = dup_title.substr(1);
+	  var times_to_dup = Number($("#od_duplicate_number").val()) + 1.0;
+	  var tmp_dup_title = '';
+	  for(var i=0; i<times_to_dup; i++) {
+		tmp_dup_title = dup_title.replace('%40i',(i+1)); //account for iteration token if used
+        $.ajax({
         type: "POST",
-        url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/duplicate/" + Drupal.settings.outline_designer.activeNid + "/" + $('#od_duplicate_multiple:checked').length + "/" + dup_title,
+        url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/duplicate/" + Drupal.settings.outline_designer.activeNid + "/" + $('#od_duplicate_multiple:checked').length + "/" + tmp_dup_title,
         success: function(msg){
-          $("#reload_table").trigger('change');
           if(msg == 0) {
             Drupal.outline_designer.growl("You don't have sufficient permissions!");
           }
@@ -348,7 +359,12 @@ Drupal.outline_designer.form_submit = function(submit_item) {
             Drupal.outline_designer.growl(msg);
           }
         }
-      });  
+        });
+		//this way the iteration doesn't trigger i times
+	    if (times_to_dup == (i+1)) {
+		  $("#reload_table").trigger('change');
+	    }
+      }
     break;
     case 'change_type':
       $.ajax({
@@ -379,10 +395,9 @@ Drupal.outline_designer.ui_reset = function() {
   $('#od_popup .popup-statusbar').html('');
   $('#od_popup .popup-content .od_uiscreen').appendTo('#od_popup_toolbox');
   //reset default settings for all input fields
-  $("#od_duplicate_multiple").attr("checked", false);
+  $("#od_duplicate_multiple").attr("checked", true);
   $("#od_delete_multiple").attr("checked", false);
   $("#od_popup_toolbox input.type_radio").attr('checked',false);
-  $("#od_duplicate_title").val('@title (Copy)');
   $("#od_add_content_title").val('');
   //reset button names
   $(".od_submit_button").val('Save');
