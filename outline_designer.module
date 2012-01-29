@@ -584,6 +584,7 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
       $title = str_replace("@2@B@", '+', $title);
 	  $title = str_replace("@2@6@", '&', $title);
       //set the node
+	  $node = new StdClass();
       $node->title = $title;
       $node->type = $type;
       $node->uid = $user->uid;
@@ -594,7 +595,7 @@ function _outline_designer_ajax($token, $action, $var1, $var2, $var3) {
       $node->book['bid'] = $parent->book['bid'];
       $node->book['menu_name'] = $parent->book['menu_name'];
       $node->book['module'] = $parent->book['module'];
-      // Allow other modules to alter the new book node.
+	  // Allow other modules to alter the new book node.
       drupal_alter('new_book_object', $node);
       if (node_access('create', $node)) {
         node_save($node);

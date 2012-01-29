@@ -45,7 +45,6 @@ function outline_child_pages_menu() {
 }
 
 /**
-<<<<<<< HEAD
  * check to make sure they can access the ajax path, doesn't mean it'll commit their operation, just that it'll load
  * this also has optional integration with the book manager module
  * so that people could use the advantages of both modules and not need 'outline own pages' permissions
@@ -53,13 +52,6 @@ function outline_child_pages_menu() {
 function _outline_child_pages_ajax_access() {
 	global $user;
   	return $user->uid == 1 || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books')) || user_access('add content to personal books');
-=======
- *
- */
-function _outline_child_pages_ajax_access() {
-	global $user;
-  	return $user->uid == 1 || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books'));
->>>>>>> b47909a96524336200790b408c737b9e758ab0b3
 }
 
 /**
@@ -67,12 +59,23 @@ function _outline_child_pages_ajax_access() {
  */
 function outline_child_pages_access($node, $type) {
   global $user;
-  $has_children = db_result(db_query('SELECT ml.has_children FROM {book} b INNER JOIN {menu_links} ml ON b.mlid = ml.mlid WHERE b.nid = %d', $node->nid)); 
-  if (module_exists('outline_designer_og')) {
-    return $has_children && variable_get('outline_child_pages_type', 'tab') == $type && ($user->uid == 1 ||og_is_group_admin($node, $user) || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)));
+  if (function_exists('outline_designer_og_menu')) {
+    if (variable_get('outline_child_pages_type', 'tab') == $type && ($user->uid == 1 ||og_is_group_admin($node, $user) || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
+      $has_children = db_result(db_query('SELECT ml.has_children FROM {book} b INNER JOIN {menu_links} ml ON b.mlid = ml.mlid WHERE b.nid = %d', $node->nid)); 
+      return $has_children;
+	}
+	else {
+	  return 0;	
+	}
   }
   else {
-    return $has_children && variable_get('outline_child_pages_type', 'tab') == $type && ($user->uid == 1 ||user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)));
+    if (variable_get('outline_child_pages_type', 'tab') == $type && ($user->uid == 1 ||user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
+      $has_children = db_result(db_query('SELECT ml.has_children FROM {book} b INNER JOIN {menu_links} ml ON b.mlid = ml.mlid WHERE b.nid = %d', $node->nid)); 
+      return $has_children;
+    }
+    else {
+      return 0;	
+    }
   }
 }
 
@@ -82,11 +85,21 @@ function outline_child_pages_access($node, $type) {
 function outline_child_pages_access_link($node, $type) {
   global $user;
   $has_children = db_result(db_query('SELECT ml.has_children FROM {book} b INNER JOIN {menu_links} ml ON b.mlid = ml.mlid WHERE b.nid = %d', $node->nid)); 
-  if (module_exists('outline_designer_og')) {
-    return $has_children && variable_get('outline_child_pages_type', 'link') == $type && ($user->uid == 1 || og_is_group_admin($node, $user) || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)));
+  if (function_exists('outline_designer_og_menu')) {
+    if (variable_get('outline_child_pages_type', 'link') == $type && ($user->uid == 1 || og_is_group_admin($node, $user) || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
+      return $has_children;
+    }
+	else {
+	  return 0;
+	}
   }
   else {
-    return $has_children && variable_get('outline_child_pages_type', 'link') == $type && ($user->uid == 1 ||user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)));
+    if(variable_get('outline_child_pages_type', 'link') == $type && ($user->uid == 1 ||user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
+      return $has_children;
+    }
+	else {
+	  return 0;	
+	}
   }
 }
 

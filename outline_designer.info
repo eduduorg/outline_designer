@@ -1,13 +1,5 @@
 name = Outline Designer
-<<<<<<< HEAD
 description = Usability improvements to the core-optional Book module that allows the rapid building of content outlines.
 dependencies[] = book
 package = Outline Designer
-core = "6.x"
-=======
-description = Outline Designer is a powerful module that allows users to reorganize their site based on an Ajax book outline.  This makes much of the current book, menu, and block functionality more usable.
-dependencies[] = book
-dependencies[] = thickbox
-dependencies[] = zzzz_ajax
-core = 6.x
->>>>>>> b47909a96524336200790b408c737b9e758ab0b3
+project = "outline_designer"

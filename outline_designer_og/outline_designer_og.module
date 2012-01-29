@@ -50,11 +50,14 @@ function outline_designer_og_menu() {
  */
 function _outline_designer_og_ajax_access() {
   global $user;
+  //check for permissions that superceed groups
+  if ($user->uid == 1 || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books'))) {
+	return 1;
+  }
   $result = db_result(db_query("SELECT uid
                                   FROM {og_uid}
                                   WHERE is_admin = 1
                                   AND uid = %d", $user->uid));
-
   if (!empty($result)) {
     return 1;
   }
