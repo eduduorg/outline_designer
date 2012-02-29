@@ -3,5 +3,4 @@ description = Allow user to outline their own books if they have the 'add conten
 dependencies[] = outline_designer
 package = Outline Designer
 core = "6.x"
-version = "6.x-1.3"
 project = "outline_designer"
