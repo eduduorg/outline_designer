@@ -146,8 +146,7 @@ function _outline_designer_setup($nid, $ajax_path) {
     elseif (node_access('create', $value['type'])) {
       $js_variables['types'][$value['type']] = array(
         $value['name'],
-        variable_get("outline_designer_" . $value['type'] . "_icon", drupal_get_path('module', 'outline_designer') . "/images/page.png"),
-      );
+        variable_get("outline_designer_" . $value['type'] . "_icon", drupal_get_path('module', 'outline_designer') . "/images/page.png"));
     }
   }
   drupal_add_js(array('outline_designer' => $js_variables), array('type' => "setting", 'scope' => JS_DEFAULT));
@@ -168,18 +167,18 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
   $icon_path = base_path() . drupal_get_path('module', 'outline_designer') . '/images/';
   $unavailableContextMenuItems = _outline_designer_setup($form['#node']->nid, $ajax_path);
   $form['ahah'] = array(
-    '#type' => 'submit',
-    '#id' => 'reload_table',
-    '#value' => t('AHAH submit'),
-    '#weight' => 1,
-    '#submit' => array(),
-    '#ahah' => array(
-      'event' => 'change',
-      'path' => $ajax_path . drupal_get_token() . '/reload_table/' . $form['#node']->nid,
-      'wrapper' => 'od-book-edit',
-      'method' => 'replace',
-      'effect' => 'none',
-      'progress' => array(
+  '#type' => 'submit',
+  '#id' => 'reload_table',
+  '#value' => t('AHAH submit'),
+  '#weight' => 1,
+  '#submit' => array(),
+  '#ahah' => array(
+    'event' => 'change',
+    'path' => $ajax_path . drupal_get_token() . '/reload_table/' . $form['#node']->nid,
+    'wrapper' => 'od-book-edit',
+    'method' => 'replace',
+    'effect' => 'none',
+    'progress' => array(
         'type' => 'throbber',
         'message' => t('Loading..'),
       ),
@@ -225,7 +224,7 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
       }
     }
     drupal_set_message(t('Books need to have at least one piece of content in them in order to work correctly with the outline designer'), 'error');
-    drupal_goto('node/add/' . $default_type, array('query' => array('parent' => '\' . $form[\'#node\']->book[\'mlid\'] . \'', 'destination' => '\' . $_GET[\'q\']')));
+    drupal_goto('node/add/' . $default_type, array('query' => array('parent' => '\\\' . $form[\\\'#node\\\']->book[\\\'mlid\\\'] . \\\'', 'destination' => '\\\' . $_GET[\\\'q\\\']')));
   }
   $form['table']['#prefix'] = '
   <fieldset class="collapsible">
@@ -266,27 +265,27 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
 function outline_designer_menu() {
   $items = array();
   $items['outline_designer/ajax'] = array(
-    'access arguments' => array('administer book outlines'),
-    'page callback' => '_outline_designer_ajax',
-    'page arguments' => array(2, 3, 4, 5, 6),
-    'type' => MENU_CALLBACK,
+      'access arguments' => array('administer book outlines'),
+      'page callback'  => '_outline_designer_ajax',
+      'page arguments' => array(2, 3, 4, 5, 6),
+      'type'  => MENU_CALLBACK,
   );
   $items['admin/content/book/outline_designer'] = array(
-    'title' => 'Usability',
-    'description' => 'The Outline Designer settings allow you to associate icons to content types for use in structuring book content.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('_outline_designer_settings'),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 9,
-    'access arguments' => array('administer site configuration'),
+      'title' => 'Usability',
+      'description' => 'The Outline Designer settings allow you to associate icons to content types for use in structuring book content.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('_outline_designer_settings'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 9,
+      'access arguments' => array('administer site configuration')
   );
   $items['admin/config/outline_designer'] = array(
-    'title' => 'Outline Designer',
-    'description' => 'The Outline Designer settings allow you to associate icons to content types for use in structuring book content.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('_outline_designer_settings_redirect'),
-    'type' => MENU_NORMAL_ITEM,
-    'access arguments' => array('administer site configuration'),
+      'title' => 'Outline Designer',
+      'description' => 'The Outline Designer settings allow you to associate icons to content types for use in structuring book content.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('_outline_designer_settings_redirect'),
+      'type' => MENU_NORMAL_ITEM,
+      'access arguments' => array('administer site configuration')
   );
   return $items;
 }
@@ -332,12 +331,7 @@ function _outline_designer_settings($form_state) {
     '#type' => 'select',
     '#title' => t('Menu theme'),
     '#default_value' => variable_get('outline_designer_theme', 'vista'),
-    '#options' => array(
-      'vista' => 'Vista',
-      'xp' => 'XP',
-      'human' => 'Human',
-      'osx' => 'OS X',
-    ),
+    '#options' => array('vista' => 'Vista', 'xp' => 'XP', 'human' => 'Human', 'osx' => 'OS X'),
     '#description' => 'Theme for the outline designer menu system',
     '#required' => TRUE,
   );
@@ -361,16 +355,7 @@ function _outline_designer_settings($form_state) {
     '#theme' => 'outline_designer_context_menu_items_matrix',
   );
   $roles = user_roles(TRUE);
-  $menu_items = array(
-    'nid' => t('Node id'),
-    'add_content' => t('Add content'),
-    'rename' => t('Rename'),
-    'edit' => t('Edit'),
-    'view' => t('View'),
-    'delete' => t('Delete'),
-    'duplicate' => t('Duplicate'),
-    'change_type' => t('Change Type'),
-  );
+  $menu_items = array('nid' => t('Node id'), 'add_content' => t('Add content'), 'rename' => t('Rename'), 'edit' => t('Edit'), 'view' => t('View'), 'delete' => t('Delete'), 'duplicate' => t('Duplicate'), 'change_type' => t('Change Type'));
   $saved_unchecked_items = variable_get('outline_designer_context_menu_exclusion_matrix', array());
   // create a checkbox for each menu item for each role
   foreach ($menu_items as $item_name => $item_desc) {
@@ -379,7 +364,7 @@ function _outline_designer_settings($form_state) {
       // then we need to uncheck it (e.g. assign FALSE to #default_value)
       $default_value = (isset($saved_unchecked_items[$rid][$item_name]['unchecked'])) ? FALSE : TRUE;
       $form["context_menu"]["checkboxes"][$item_name]["outline_designer_context_menu_" . $item_name . "_" . $rid] = array(
-        '#name' => 'outline_designer_context_menu_' . $item_name . '_' . $rid,
+  '#name' => 'outline_designer_context_menu_' . $item_name . '_' . $rid,
         '#type' => 'checkbox',
         '#title' => $item_desc,
         '#default_value' => $default_value,
@@ -431,7 +416,7 @@ function _outline_designer_settings($form_state) {
         '#title' => t("Icon Path"),
         '#default_value' => variable_get("outline_designer_" . $value['type'] . "_icon",   drupal_get_path('module', 'outline_designer') . "/images/page.png"),
         '#required' => FALSE,
-      );
+        );
       // Create a upload field for each content type so icons can be added for them
       $form["outline_designer_" . $value['type']]["outline_designer_" . $value['type'] . "_icon"] = array(
         '#type' => 'file',
@@ -442,10 +427,7 @@ function _outline_designer_settings($form_state) {
     }
   }
   $form['#attributes'] = array('enctype' => "multipart/form-data");
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save'),
-  );
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Save'));
   return $form;
 }
 /**
@@ -490,9 +472,9 @@ function _outline_designer_settings_submit($form, &$form_state) {
   $is_writable = file_prepare_directory($dir,   1);
   if ($is_writable) {
     $validators = array(
-      'file_validate_is_image' => array(),
-      '_outline_designer_validate_image_resolution' => array('16x16'),
-      'file_validate_size' => array(30 * 1024),
+     'file_validate_is_image' => array(),
+     '_outline_designer_validate_image_resolution' => array('16x16'),
+     'file_validate_size' => array(30 * 1024),
     );
     $result = db_query("SELECT type, name FROM {node_type}");
     while ($value = db_fetch_array($result)) {
@@ -845,50 +827,50 @@ function outline_designer_suffix() {
   $typeoutput .= '</tr></table>';
   $duplicate_form['od_duplicate_number'] = array(
     '#title' => t('How many copies would you like?'),
-    '#type' => 'select',
-    '#id' => 'od_duplicate_number',
-    '#description' => t('Duplicates will be performed one at a time to avoid load issues'),
-    '#options' => array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15),
-    '#required' => TRUE,
-    '#default_value' => 1,
-    '#weight' => 0,
+  '#type' => 'select',
+  '#id' => 'od_duplicate_number',
+  '#description' => t('Duplicates will be performed one at a time to avoid load issues'),
+  '#options' => array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15),
+  '#required' => TRUE,
+  '#default_value' => 1,
+  '#weight' => 0,
   );
   $duplicate_form['od_duplicate_multiple'] = array(
-    '#title' => t('Duplicate Hierarchy'),
-    '#id' => 'od_duplicate_multiple',
-    '#type' => 'checkbox',
-    '#attributes' => array('checked' => 'checked'),
-    '#description' => t('If checked, the current content and all child pages will be duplicated'),
-    '#weight' => 1,
+   '#title' => t('Duplicate Hierarchy'),
+   '#id' => 'od_duplicate_multiple',
+   '#type' => 'checkbox',
+   '#attributes' => array('checked' => 'checked'),
+   '#description' => t('If checked, the current content and all child pages will be duplicated'),
+   '#weight' => 1,
   );
   $duplicate_form['od_duplicate_title'] = array(
-    '#title' => t('Title format'),
-    '#id' => 'od_duplicate_title',
-    '#type' => 'textfield',
-    '#required' => TRUE,
-    '#size' => 20,
-    '#description' => t('Tokens: @title = content title; @i = duplicate number'),
-    '#weight' => 2,
+   '#title' => t('Title format'),
+   '#id' => 'od_duplicate_title',
+   '#type' => 'textfield',
+   '#required' => TRUE,
+   '#size' => 20,
+   '#description' => t('Tokens: @title = content title; @i = duplicate number'),
+   '#weight' => 2,
   );
   // delete form
   $delete_form['od_delete_multiple'] = array(
-    '#title' => t('Delete Hierarchy'),
-    '#id' => 'od_delete_multiple',
-    '#type' => 'checkbox',
-    '#description' => t('Warning: This action cannot be undone.'),
-    '#weight' => 0,
+   '#title' => t('Delete Hierarchy'),
+   '#id' => 'od_delete_multiple',
+   '#type' => 'checkbox',
+   '#description' => t('Warning: This action cannot be undone.'),
+   '#weight' => 0,
   );
   // add form
   $add_form['od_add_content_title'] = array(
-    '#title' => t('Title'),
-    '#id' => 'od_add_content_title',
-    '#type' => 'textfield',
-    '#required' => TRUE,
-    '#size' => 20,
-    '#description' => t('Make sure you edit content after creation if it has "required fields"
+   '#title' => t('Title'),
+   '#id' => 'od_add_content_title',
+   '#type' => 'textfield',
+   '#required' => TRUE,
+   '#size' => 20,
+   '#description' => t('Make sure you edit content after creation if it has "required fields"
 '),
-    '#weight' => 0,
-    '#suffix' => $typeoutput,
+   '#weight' => 0,
+   '#suffix' => $typeoutput,
   );
   return '
     <div id="od_popup_overlay"></div>
