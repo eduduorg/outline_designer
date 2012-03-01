@@ -4,9 +4,16 @@
  * Install, update and uninstall functions for the outline_child_pages module.
  */
 
-function outline_child_pages_install() {
-}
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function outline_child_pages_install() { }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function outline_child_pages_uninstall() {
   // Delete variables
   $variables = array(

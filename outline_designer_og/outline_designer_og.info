@@ -3,5 +3,6 @@ description = "Allows group admins to use Outline Designer for books in their gr
 dependencies[] = "outline_designer"
 dependencies[] = "og"
 package = "Outline Designer"
-core = "6.x"
+core = 7.x
 project = "outline_designer"
+

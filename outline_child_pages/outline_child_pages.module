@@ -2,14 +2,19 @@
 // $Id: outline_child_pages.module
 
 /**
- * Implementing hook_perm
+ * Implements hook_permission().
  */
-function outline_child_pages_perm() {
-  return array('outline own pages');
+function outline_child_pages_permission() {
+  return array(
+    'outline own pages' => array(
+      'title' => t('outline own pages'),
+      'description' => t('TODO Add a description for \'outline own pages\''),
+    ),
+  );
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function outline_child_pages_menu() {
 
@@ -37,9 +42,9 @@ function outline_child_pages_menu() {
   );
   $items['outline_designer/ocp_ajax'] = array(
     'access callback' => '_outline_child_pages_ajax_access',
-    'page callback'  => '_outline_designer_ajax',
+    'page callback' => '_outline_designer_ajax',
     'page arguments' => array(2, 3, 4, 5, 6),
-    'type'  => MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
   );
   return $items;
 }
@@ -50,31 +55,31 @@ function outline_child_pages_menu() {
  * so that people could use the advantages of both modules and not need 'outline own pages' permissions
  */
 function _outline_child_pages_ajax_access() {
-	global $user;
-  	return $user->uid == 1 || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books')) || user_access('add content to personal books');
+  global $user;
+  return $user->uid == 1 || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books')) || user_access('add content to personal books');
 }
 
 /**
  * Check that node has child pages and that proper permission are there for the menu tab
  */
-function outline_child_pages_access($node, $type) {
+function outline_child_pages_node_access($type, $node) {
   global $user;
   if (function_exists('outline_designer_og_menu')) {
-    if (variable_get('outline_child_pages_type', 'tab') == $type && ($user->uid == 1 ||og_is_group_admin($node, $user) || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
-      $has_children = db_result(db_query('SELECT ml.has_children FROM {book} b INNER JOIN {menu_links} ml ON b.mlid = ml.mlid WHERE b.nid = %d', $node->nid)); 
-      return $has_children;
-	}
-	else {
-	  return 0;	
-	}
-  }
-  else {
-    if (variable_get('outline_child_pages_type', 'tab') == $type && ($user->uid == 1 ||user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
-      $has_children = db_result(db_query('SELECT ml.has_children FROM {book} b INNER JOIN {menu_links} ml ON b.mlid = ml.mlid WHERE b.nid = %d', $node->nid)); 
+    if (variable_get('outline_child_pages_type', 'tab') == $type && ($user->uid == 1 || og_is_group_admin($node, $user) || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
+      $has_children = db_query('SELECT ml.has_children FROM {book} b INNER JOIN {menu_links} ml ON b.mlid = ml.mlid WHERE b.nid = :b.nid', array(':b.nid' => $node->nid))->fetchField();
       return $has_children;
     }
     else {
-      return 0;	
+      return 0;
+    }
+  }
+  else {
+    if (variable_get('outline_child_pages_type', 'tab') == $type && ($user->uid == 1 || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
+      $has_children = db_query('SELECT ml.has_children FROM {book} b INNER JOIN {menu_links} ml ON b.mlid = ml.mlid WHERE b.nid = :b.nid', array(':b.nid' => $node->nid))->fetchField();
+      return $has_children;
+    }
+    else {
+      return 0;
     }
   }
 }
@@ -84,27 +89,27 @@ function outline_child_pages_access($node, $type) {
  */
 function outline_child_pages_access_link($node, $type) {
   global $user;
-  $has_children = db_result(db_query('SELECT ml.has_children FROM {book} b INNER JOIN {menu_links} ml ON b.mlid = ml.mlid WHERE b.nid = %d', $node->nid)); 
+  $has_children = db_query('SELECT ml.has_children FROM {book} b INNER JOIN {menu_links} ml ON b.mlid = ml.mlid WHERE b.nid = :b.nid', array(':b.nid' => $node->nid))->fetchField();
   if (function_exists('outline_designer_og_menu')) {
     if (variable_get('outline_child_pages_type', 'link') == $type && ($user->uid == 1 || og_is_group_admin($node, $user) || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
       return $has_children;
     }
-	else {
-	  return 0;
-	}
+    else {
+      return 0;
+    }
   }
   else {
-    if(variable_get('outline_child_pages_type', 'link') == $type && ($user->uid == 1 ||user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
+    if (variable_get('outline_child_pages_type', 'link') == $type && ($user->uid == 1 || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
       return $has_children;
     }
-	else {
-	  return 0;	
-	}
+    else {
+      return 0;
+    }
   }
 }
 
 /**
- * Implementation of hook_link().
+ * Implements hook_link().
  */
 function outline_child_pages_link($type, $node = NULL, $teaser = FALSE) {
   $links = array();
@@ -115,7 +120,7 @@ function outline_child_pages_link($type, $node = NULL, $teaser = FALSE) {
       if (outline_child_pages_access($node, 'link')) {
         $links['book_outline_child'] = array(
           'title' => t('Outline child pages'),
-      'href' => 'node/'. $node->nid .'/outline_children_link',
+          'href' => 'node/' . $node->nid . '/outline_children_link',
         );
       }
     }
@@ -124,7 +129,7 @@ function outline_child_pages_link($type, $node = NULL, $teaser = FALSE) {
 }
 
 /**
- * Implementation of hook_form_alter(). 
+ * Implements hook_form_alter(). ().
  * Adds a radio select to choose between a link or a tab.
  */
 function outline_child_pages_form_alter(&$form, $form_state, $form_id) {
@@ -132,7 +137,10 @@ function outline_child_pages_form_alter(&$form, $form_state, $form_id) {
     $form["ui"]['outline_child_pages_type'] = array(
       '#type' => 'radios',
       '#title' => t('Display "Outline child pages" as a'),
-      '#options' => array('tab' => 'Tab', 'link' => 'Link'),
+      '#options' => array(
+        'tab' => 'Tab',
+        'link' => 'Link',
+      ),
       '#default_value' => variable_get('outline_child_pages_type', 'tab'),
       '#weight' => 5,
     );
@@ -140,7 +148,8 @@ function outline_child_pages_form_alter(&$form, $form_state, $form_id) {
   //add in the outline designer fun to our tab and link based outliners
   if ($form_id == 'book_admin_edit' && arg(0) == "node" && (arg(2) == 'outline_children' || arg(2) == 'outline_children_link')) {
     _outline_designer_book_admin_form_alter($form, $form_state, $form_id, 'outline_designer/ocp_ajax/');
-  }//add outline designer into the ajax callback or it'll break after first submission
+  }
+  //add outline designer into the ajax callback or it'll break after first submission
   elseif ($form_id == 'book_admin_edit' && arg(0) == 'outline_designer' && arg(1) == 'ocp_ajax') {
     _outline_designer_book_admin_form_alter($form, $form_state, $form_id, 'outline_designer/ocp_ajax/');
   }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  */
 function outline_designer_og_form_alter(&$form, $form_state, $form_id) {
   if ($form_id == 'book_admin_edit' && arg(0) == 'outline_designer' && (arg(1) == 'og_ajax' || arg(1) == 'book')) {
@@ -9,7 +9,7 @@ function outline_designer_og_form_alter(&$form, $form_state, $form_id) {
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function outline_designer_og_menu() {
   $items['node/%node/outline_designer'] = array(
@@ -33,9 +33,9 @@ function outline_designer_og_menu() {
   );
   $items['outline_designer/og_ajax'] = array(
     'access callback' => '_outline_designer_og_ajax_access',
-    'page callback'  => '_outline_designer_ajax',
+    'page callback' => '_outline_designer_ajax',
     'page arguments' => array(2, 3, 4, 5, 6),
-    'type'  => MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
   );
 
   return $items;
@@ -53,10 +53,10 @@ function _outline_designer_og_ajax_access() {
   if ($user->uid == 1 || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books'))) {
     return 1;
   }
-  $result = db_result(db_query("SELECT uid
+  $result = db_query("SELECT uid
                                   FROM {og_uid}
-                                  WHERE is_admin = 1
-                                  AND uid = %d", $user->uid));
+                                  WHERE is_admin = :is_admin
+                                  AND uid = :uid", array(':is_admin' => 1, ':uid' => $user->uid))->fetchField();
   if (!empty($result)) {
     return 1;
   }
@@ -73,12 +73,12 @@ function _outline_designer_og_books_access($node) {
   }
 
   // Check that there's books in this group
-  $val = db_result(db_query("SELECT bid
+  $val = db_query("SELECT bid
                                  FROM {book} b
                                  JOIN {og_ancestry} o
                                  ON b.bid = o.nid
-                                 WHERE o.group_nid = %d
-                                 LIMIT 1", $node->nid));
+                                 WHERE o.group_nid = :o.group_nid
+                                 LIMIT 1", array(':o.group_nid' => $node->nid))->fetchField();
   if (empty($val)) {
     return 0;
   }
@@ -110,6 +110,10 @@ function _outline_designer_og_book_access($node) {
   return $is_group_admin;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function outline_designer_og_books($group_node) {
   $sql = "SELECT b.bid
           FROM {book} b
@@ -117,7 +121,12 @@ function outline_designer_og_books($group_node) {
           ON b.bid = o.nid
           WHERE o.group_nid = %d
           GROUP BY b.bid";
-  $bids = db_query($sql, $group_node->nid);
+  $bids = db_query("SELECT b.bid
+          FROM {book} b
+          JOIN {og_ancestry} o
+          ON b.bid = o.nid
+          WHERE o.group_nid = :o.group_nid
+          GROUP BY b.bid", array(':o.group_nid' => $group_node->nid));
 
   $books = array();
   while ($row = db_fetch_array($bids)) {
@@ -129,17 +138,17 @@ function outline_designer_og_books($group_node) {
     $item_list[] = l($book->title, "outline_designer/book/" . $book->nid);
   }
 
-  return theme('item_list', $item_list, t("Books to rearrange in %group_name", array('%group_name' => $group_node->title)));
+  return theme('item_list', array('items' => $item_list, 'title' => t("Books to rearrange in %group_name", array('%group_name' => $group_node->title))));
 }
 
 /**
- * Implementation of hook_new_book_alter().
+ * Implements hook_new_book_alter().
  */
 function outline_designer_og_new_book_object_alter(&$node) {
   // Load the group node.
-  $group_node = node_load(db_result(db_query("SELECT group_nid
+  $group_node = node_load(db_query("SELECT group_nid
                                     FROM {og_ancestry}
-                                    WHERE nid = %d", $node->book['bid'])));
+                                    WHERE nid = :nid", array(':nid' => $node->book['bid']))->fetchField());
   $is_public = TRUE;
   if ($group_node->og_private) {
     $is_public = FALSE;
