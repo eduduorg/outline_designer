@@ -1,8 +1,7 @@
-name = "Organic Groups Integration"
+name = "Outline Designer Book Organic Groups"
 description = "Allows group admins to use Outline Designer for books in their group."
-dependencies[] = "outline_designer"
+dependencies[] = "outline_designer_book"
 dependencies[] = "og"
 package = "Outline Designer"
 core = 7.x
 project = "outline_designer"
-

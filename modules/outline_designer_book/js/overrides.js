@@ -1,4 +1,3 @@
-
   /**
    * Overload tabledrag onDrop event so that it ajax saves the new parent for the node
    */
@@ -24,15 +23,8 @@
     } else {
     p_nid = Drupal.settings.outline_designer.rootNid;
     }
-    $.ajax({
-    type: "POST",
-    url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/drag_drop/" + drag_nid + "/" + p_nid + "/" + weight,
-    success: function(msg){
-      //could implement some kind of history / undo list here if we want to
-      $("#reload_table").trigger('change');
-      Drupal.outline_designer.growl(msg);
-    }
-    });
+    // standard function to get / set results via AJAX
+    Drupal.outline_designer.ajax_call('core', 'drag_drop', drag_nid, p_nid, weight, null);
     return null;
   };
   /**
@@ -45,9 +37,9 @@
   Drupal.tableDrag.prototype.updateField = function(changedRow, group) {
     var rowSettings = this.rowSettings(group, changedRow);
     var sourceRow = '';
-		var previousRow = '';
-		var nextRow = '';
-		var useSibling = '';
+    var previousRow = '';
+    var nextRow = '';
+    var useSibling = '';
     // Set the row as it's own target.
     if (rowSettings.relationship == 'self' || rowSettings.relationship == 'group') {
      sourceRow = changedRow;
@@ -154,15 +146,7 @@
         }
         if(tmpVal != this.value) {
           reweight_nid = this.id.replace('edit-table-book-admin-','').replace('-weight','');
-          $.ajax({
-          type: "POST",
-          url: Drupal.settings.outline_designer.ajaxPath + Drupal.settings.outline_designer.token +"/reweight/" + reweight_nid + "/" + this.value,
-          success: function(msg){
-            //could implement some kind of history / undo list here if we want to
-            //enable this to get reweighting message support but it's annoying
-            //$("#reload_table").trigger('change');
-          }
-          });
+          Drupal.outline_designer.ajax_call('core', 'reweight', reweight_nid, this.value, null, 'none');
         }
         });
       }

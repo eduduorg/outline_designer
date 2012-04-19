@@ -34,7 +34,7 @@ function outline_designer_og_menu() {
   $items['outline_designer/og_ajax'] = array(
     'access callback' => '_outline_designer_og_ajax_access',
     'page callback' => '_outline_designer_ajax',
-    'page arguments' => array(2, 3, 4, 5, 6),
+    'page arguments' => array(2, 3, 4, 5, 6, 7),
     'type' => MENU_CALLBACK,
   );
 
@@ -42,15 +42,12 @@ function outline_designer_og_menu() {
 }
 
 /**
- * This function checks if the user accessign the ajax callback is a group admin
- * for any group. It'd be better obviously if we were checking that they were
- * admin for the group which books they are editing but that'd take rewritting
- * more of outline_designer than I'd like to do now.
+ * Access Callback: checks if the user accessign is a group admin for any group.
  */
 function _outline_designer_og_ajax_access() {
   global $user;
   // check for permissions that superceed groups
-  if ($user->uid == 1 || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books'))) {
+  if ($user->uid == 1 || (user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books'))) && user_access('use outline designer')) {
     return 1;
   }
   $result = db_query("SELECT uid
