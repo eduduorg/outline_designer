@@ -5,13 +5,14 @@
  */
 $(document).ready(function() {
   //due to a previous glitch that loaded inefficiently, this will force it to only load once
-  $('#book-admin-edit').parent().attr('id','od-book-edit');
+  $('#book-outline').parent().attr('id','od-book-edit');
  });
 
 /**
  * behaviors specific to the outline designer for overloading functions
  */
-Drupal.behaviors.outline_designer_book = function (context) {
+Drupal.behaviors.outline_designer_book = {
+    attach: function (context, settings) {
   //collapse / expand functionality
   $('.od-toggle-open').bind('click', function(e){
     if ($(this).attr('alt') == 'open') {
@@ -94,14 +95,20 @@ Drupal.behaviors.outline_designer_book = function (context) {
     }
   }
   //binding isn't working in Opera / IE correctly or at all
-    $('.outline_designer_edit_button').contextMenu(Drupal.settings.outline_designer.context_menu, {theme: Drupal.settings.outline_designer.theme, beforeShow: function () { if ($.inArray("nid", unavailableContextMenuItems) == -1) { $(this.menu).find('.context-menu-item-inner:first').css('backgroundImage','url(' + $("#node-" + Drupal.settings.outline_designer.activeNid +"-icon").attr('src') +')').empty().append("nid " + Drupal.settings.outline_designer.activeNid);}
+    $('.outline_designer_edit_button').contextMenu(Drupal.settings.outline_designer.context_menu, {
+      theme: Drupal.settings.outline_designer.theme, 
+      beforeShow: function () { 
+      if ($.inArray("nid", unavailableContextMenuItems) == -1) { 
+        $(this.menu).find('.context-menu-item-inner:first').css('backgroundImage','url(' + $("#node-" + Drupal.settings.outline_designer.activeNid +"-icon").attr('src') +')').empty().append("nid " + Drupal.settings.outline_designer.activeNid);
+        }
       },
       useIframe: false,
       shadow: false
     });
-  //whenever the screen gets altered, make sure we close everything that should be
-  Drupal.outline_designer.collapseInit();
-};
+    //whenever the screen gets altered, make sure we close everything that should be
+    Drupal.outline_designer.collapseInit();
+    }
+  };
 
 Drupal.outline_designer.get_active_title = function() {
   return $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html();
@@ -305,20 +312,26 @@ Drupal.outline_designer.render_popup = function(render_title) {
   };
   
   // special behaviors for the overlay
-  Drupal.behaviors.outlineDesignerChangeType = function (context) {
+  Drupal.behaviors.outlineDesignerChangeType = {
+    attach: function (context, settings) {
     $("#od_change_type input.type_radio", context).click(function(e){
       Drupal.settings.outline_designer.activeType = $(this).val();
-    });
+});
+    }
   };
-  Drupal.behaviors.outlineDesignerAddContentTitle = function (context) {
+  Drupal.behaviors.outlineDesignerAddContentTitle = {
+    attach: function (context, settings) {
     $("#od_add_content_title", context).keyup(function(e){
       $(".popup-statusbar .tmptitle").empty().append($("#od_add_content_title").val());
-    });
+});
+    }
   };
-  Drupal.behaviors.outlineDesignerAddContent = function (context) {
+  Drupal.behaviors.outlineDesignerAddContent = {
+    attach: function (context, settings) {
     $("#od_add_content input.type_radio", context).click(function(e){
       Drupal.settings.outline_designer.activeType = $(this).val();
       $(".popup-statusbar .tmpimage", context).empty().append($(this).next().clone());
-    });
+});
+    }
   };
 })(jQuery);
