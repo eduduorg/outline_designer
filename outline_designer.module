@@ -57,7 +57,7 @@ function outline_designer_menu() {
 function _outline_designer_setup($ajax_path) {
   drupal_add_css(drupal_get_path('module', 'outline_designer') . '/css/outline_designer.css');
   drupal_add_js(drupal_get_path('module', 'outline_designer') . '/js/jquery.contextmenu.js');
-  drupal_add_js(drupal_get_path('module', 'outline_designer') . '/js/outline_designer.js', array('type' => 'footer', 'scope' => JS_DEFAULT));
+  drupal_add_js(drupal_get_path('module', 'outline_designer') . '/js/outline_designer.js', array('scope' => 'footer'));
   // invoke implementation of ops javascript
   module_invoke_all('outline_designer_ops_js', $ajax_path);
 }
@@ -103,7 +103,7 @@ function outline_designer_outline_designer_ops_js($ajax_path) {
       'ajaxPath' => $ajax_base_path,
     ),
   );
-  drupal_add_js($js_variables, array('type' => "setting", 'scope' => JS_DEFAULT));
+  drupal_add_js($js_variables, "setting");
 }
 /**
  * Theme Callback: render the top buttons for outline designer ui.
