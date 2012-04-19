@@ -1,5 +1,4 @@
 (function ($) {
-Drupal.settings.outline_designer = new Array();
 //extend the drupal js object by adding in an outline_designer name-space
 Drupal.outline_designer = Drupal.outline_designer || { functions: {} };
 // ensure that od object for ops is set
@@ -64,33 +63,41 @@ Drupal.outline_designer.ajax_call = function(type, action, param1, param2, param
   });
 }
 // popup event listeners
-Drupal.behaviors.outlineDesignerCancelButton = function (context) {
-  $('.od_cancel_button', context).click(function(){ 
-    Drupal.outline_designer.ui_reset();
-  });
-};
-Drupal.behaviors.outlineDesignerSubmitButton = function (context) {
-  $('.od_submit_button', context).click(function(){
-    Drupal.outline_designer.form_submit(Drupal.settings.outline_designer.activeAction);
-  });
-};
-Drupal.behaviors.outlineDesignerCloseOverlay = function (context) {
-  //things for when the popup is active to give ways of closing it
-  $('#od_popup_overlay', context).click(function(){
-    Drupal.outline_designer.ui_reset();
-  });
-};
-Drupal.behaviors.outlineDesignerEscapeOverlay = function (context) {
-  $('#od_popup', context).keydown(function(e){
-    if(document.all) {
-      e = event;
+Drupal.behaviors.outlineDesignerCancelButton = {
+    attach: function (context, settings) {
+      $('.od_cancel_button', context).click(function(){ 
+        Drupal.outline_designer.ui_reset();
+      });
     }
-    if(e.keyCode == 13){  // Enter pressed
-    Drupal.outline_designer.form_submit(Drupal.settings.outline_designer.activeAction);
-    return false;
+  };
+Drupal.behaviors.outlineDesignerSubmitButton = {
+    attach: function (context, settings) {
+      $('.od_submit_button', context).click(function(){
+        Drupal.outline_designer.form_submit(Drupal.settings.outline_designer.activeAction);
+      });
     }
-  });
-};
+  };
+Drupal.behaviors.outlineDesignerCloseOverlay = {
+    attach: function (context, settings) {
+      //things for when the popup is active to give ways of closing it
+      $('#od_popup_overlay', context).click(function(){
+        Drupal.outline_designer.ui_reset();
+      });
+    }
+  };
+Drupal.behaviors.outlineDesignerEscapeOverlay = {
+    attach: function (context, settings) {
+    $('#od_popup', context).keydown(function(e){
+      if(document.all) {
+        e = event;
+      }
+      if(e.keyCode == 13){  // Enter pressed
+        Drupal.outline_designer.form_submit(Drupal.settings.outline_designer.activeAction);
+        return false;
+      }
+    });
+    }
+  };
 
 // handle rendering of the form
 Drupal.outline_designer.form_render = function(render_item) {
