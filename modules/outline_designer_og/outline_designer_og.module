@@ -108,8 +108,7 @@ function _outline_designer_og_book_access($node) {
 }
 
 /**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
+ * Output a list of books that are in this organic group
  */
 function outline_designer_og_books($group_node) {
   $sql = "SELECT b.bid

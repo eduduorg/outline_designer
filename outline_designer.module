@@ -24,7 +24,7 @@ function outline_designer_permission() {
   return array(
     'use outline designer' => array(
       'title' => t('use outline designer'),
-      'description' => t('TODO Add a description for \'use outline designer\''),
+      'description' => t('Grant basic access to use the outline designer'),
     ),
   );
 }
@@ -40,7 +40,7 @@ function outline_designer_menu() {
     'page arguments' => array(2, 3, 4, 5, 6, 7),
     'type' => MENU_CALLBACK,
   );
-  $items['admin/config/outline_designer'] = array(
+  $items['admin/config/content/outline_designer'] = array(
     'title' => 'Outline Designer',
     'description' => 'The Outline Designer settings allow you to associate icons to content types for use in structuring book content.',
     'page callback' => 'drupal_get_form',

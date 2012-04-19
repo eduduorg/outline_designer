@@ -5,14 +5,12 @@
  */
 
 /**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
+ * Implements hook_install().
  */
 function outline_designer_install() { }
 
 /**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
+ * Implements hook_uninstall().
  */
 function outline_designer_uninstall() {
   // Delete variables

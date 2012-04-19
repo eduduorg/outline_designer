@@ -6,7 +6,7 @@ function outline_child_pages_permission() {
   return array(
     'outline own pages' => array(
       'title' => t('outline own pages'),
-      'description' => t('TODO Add a description for \'outline own pages\''),
+      'description' => t('Grants access to use outline designer for content you own'),
     ),
   );
 }

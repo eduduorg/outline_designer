@@ -209,13 +209,14 @@ function _outline_designer_book_settings($form_state) {
     $packaged_icons .= '<img src="' . base_path() . drupal_get_path('module', 'outline_designer') . '/images/additional_icons/' . $title . '.png" title="' . $title . '" alt="' . $title . '" hspace="2px" />';
   }
   // create it just incase and make sure it's writable
-  $dir = file_create_path(file_directory_path() . '/outline_designer');
-  file_prepare_directory($dir, 1);
+  $file_dir_path = variable_get('file_' . file_default_scheme() . '_path', conf_path() . '/files');
+  $dir = drupal_realpath(file_default_scheme() . '://outline_designer');  file_prepare_directory($dir, 1);
   // make sure it can be opened
-  if ($handle = opendir('./' . file_directory_path() . '/outline_designer')) {
+	$uploaded_icons = '';
+  if ($handle = opendir('./' . $file_dir_path. '/outline_designer')) {
     while (FALSE !== ($file = readdir($handle))) {
       if ($file != "." && $file != "..") {
-        $uploaded_icons .= '<img src="' . base_path() . file_directory_path() . '/outline_designer/' . $file . '" title="' . $file . '" alt="' . $file . '" hspace="2px" />';
+        $uploaded_icons .= '<img src="' . base_path() . $file_dir_path. '/outline_designer/' . $file . '" title="' . $file . '" alt="' . $file . '" hspace="2px" />';
       }
     }
     closedir($handle);
@@ -273,9 +274,11 @@ function _outline_designer_book_settings($form_state) {
     '#type' => 'markup',
     '#value' => $uploaded_icons,
   );
-  $result = db_query("SELECT type, name FROM {node_type}");
+  $result = db_select('node_type', 'nt')
+  ->fields('nt', array('type', 'name'))
+  ->execute();
   $types_ary = variable_get('book_allowed_types', array('page'));
-  while ($value = db_fetch_array($result)) {
+  while ($result) {
     // only show types that are allowed
     if (in_array($value['type'], $types_ary)) {
       // create a textfield incase they want to enter an icon that way
@@ -347,7 +350,7 @@ function _outline_designer_book_settings_submit($form, &$form_state) {
     variable_set('outline_child_pages_type', $form_state['values']["outline_child_pages_type"]);
   }
   // the rest is for files
-  $dir = file_create_path(file_directory_path() . '/outline_designer');
+  $dir = file_create_path($file_dir_path. '/outline_designer');
   $is_writable = file_prepare_directory($dir,   1);
   if ($is_writable) {
     $validators = array(
@@ -417,13 +420,13 @@ function outline_designer_book_outline_designer_form_overlay() {
   $result = db_query("SELECT type,name FROM {node_type} ORDER BY name");
   $typeoutput = '<table><tr>';
   $count = 0;
-  while ($value = db_fetch_array($result)) {
+  foreach ($result as $value) {
     // ensure there is no permission escalation in type switching
-    if (array_search($value['type'], $types_ary) === FALSE) {
+    if (array_search($value->type, $types_ary) === FALSE) {
     }
-    elseif (node_access('create', $value['type'])) {
+    elseif (node_access('create', $value->type)) {
       $count++;
-      $typeoutput .= '<td><input type="radio" class="type_radio" name="content_type[]" value="' . $value['type'] . '"/> <img src="' . base_path() . variable_get("outline_designer_" . $value['type'] . "_icon", drupal_get_path('module', 'outline_designer') . "/images/page.png") . '" />' . $value['name'] . '</td>';
+      $typeoutput .= '<td><input type="radio" class="type_radio" name="content_type[]" value="' . $value->type . '"/> <img src="' . base_path() . variable_get("outline_designer_" . $value->type . "_icon", drupal_get_path('module', 'outline_designer') . "/images/page.png") . '" />' . $value->name . '</td>';
       if ($count % 3 == 0) {
         $typeoutput .= '</tr><tr>';
       }
@@ -608,14 +611,14 @@ function outline_designer_book_outline_designer_ops_js() {
     ),
   );
   $result = db_query("SELECT type, name FROM {node_type} ORDER BY name");
-  while ($value = db_fetch_array($result)) {
+  foreach ($result as $value) {
     // ensure there is no permission escalation
-    if (array_search($value['type'], $types_ary) === FALSE) {
+    if (array_search($value->type, $types_ary) === FALSE) {
     }
-    elseif (node_access('create', $value['type'])) {
-      $js_variables['outline_designer_book']['types'][$value['type']] = array(
-        $value['name'],
-        variable_get("outline_designer_" . $value['type'] . "_icon", drupal_get_path('module', 'outline_designer') . "/images/page.png"),
+    elseif (node_access('create', $value->type)) {
+      $js_variables['outline_designer_book']['types'][$value->type] = array(
+        $value->type,
+        variable_get("outline_designer_" . $value->type . "_icon", drupal_get_path('module', 'outline_designer') . "/images/page.png"),
       );
     }
   }
