@@ -54,18 +54,18 @@ function outline_designer_menu() {
 /**
  * Helper function to generate scripts for a page.
  */
-function _outline_designer_setup($ajax_path) {
+function _outline_designer_setup($ajax_path, $nid) {
   drupal_add_css(drupal_get_path('module', 'outline_designer') . '/css/outline_designer.css');
   drupal_add_js(drupal_get_path('module', 'outline_designer') . '/js/jquery.contextmenu.js');
   drupal_add_js(drupal_get_path('module', 'outline_designer') . '/js/outline_designer.js', array('scope' => 'footer'));
   // invoke implementation of ops javascript
-  module_invoke_all('outline_designer_ops_js', $ajax_path);
+  module_invoke_all('outline_designer_ops_js', $ajax_path, $nid);
 }
 
 /**
  * Implements hook_outline_designer_ops_js().
  */
-function outline_designer_outline_designer_ops_js($ajax_path) {
+function outline_designer_outline_designer_ops_js($ajax_path, $nid = NULL) {
   $purl = '';
   if (module_exists('purl')) {
     $options = array();
@@ -199,68 +199,11 @@ function _outline_designer_ajax($token, $type, $action, $var1, $var2, $var3) {
   $var2 = check_plain($var2);
   $var3 = check_plain($var3);
   if (drupal_valid_token($token)) {
-    switch ($action) {
-      // in: active nid, parent nid, new weight
-      // action: reorganize nodes
-      // out: node id,  node type,  icon to render
-      case 'drag_drop':
-        $nid = $var1;
-        $parent_nid = $var2;
-        $weight = $var3;
-        // load the active node
-        $node = node_load($nid);
-        // make sure they can update this node
-        if (node_access('update', $node)) {
-          // load parent
-          $parent = node_load($parent_nid);
-          // set parent
-          $node->book['plid'] = $parent->book['mlid'];
-          $node->book['weight'] = $weight;
-          $node->revision = 1;
-          $node->log = t("Outline Designer -- nid:%nid parent nid changed to %parent_nid", array('%nid' => $nid, '%parent_nid' => $parent_nid));
-          node_save($node);
-          print t("Content position has been updated (nid:%nid)", array('%nid' => $nid));
-        }
-        else {
-          print t("Content position has not been updated due to invalid permissions!");
-        }
-        break;
-        // in: node id, weight
-        // action: saved / updated node
-        // out: message
-      case 'reweight':
-        $nid = $var1;
-        $weight = $var2;
-        $node = node_load($nid);
-        // make sure they can update this node
-        if (node_access('update', $node)) {
-          // set parent / weight
-          $node->book['weight'] = $weight;
-          node_save($node);
-          print t("Position has been updated (nid:%nid)", array('%nid' => $nid));
-        }
-        else {
-          print t("Position has not been updated due to invalid permissions!");
-        }
-        break;
-        // in: nothing
-        // action: rebuild the HTML of the table
-        // out: AHAH tabledrag object
-      case 'reload_table':
-        $nid = $var1;
-        module_load_include('inc', 'book', 'book.admin');
-        $output = drupal_get_form('book_admin_edit', node_load($nid));
-        drupal_json_output(array('status' => TRUE, 'data' => $output));
-        break;
-        // core callbacks failed, try hooked ones
-      default:
-        $ops = _outline_designer_get_operations($type, TRUE);
-        foreach ($ops as $key => $op) {
-          if ($action == $key && isset($op['callback'])) {
-            print call_user_func_array($op['callback'], array($var1, $var2, $var3));
-          }
-        }
-        break;
+    $ops = _outline_designer_get_operations($type, TRUE);
+    foreach ($ops as $key => $op) {
+      if ($action == $key && isset($op['callback'])) {
+        print call_user_func_array($op['callback'], array($var1, $var2, $var3));
+      }
     }
   }
   exit();
@@ -377,6 +320,11 @@ function _outline_designer_get_operations($type, $keep_callbacks = FALSE) {
       // make sure its set so we dont throw an error
       if (isset($op['callback'])) {
         unset($ops[$key]['callback']);
+      }
+      // remove calls stating they are API only
+      // callback removal is for all UI based calls
+      if ($op['title'] == '<<OUTLINE_DESIGNER_API_ONLY>>') {
+        unset($ops[$key]);
       }
     }
   }

@@ -25,7 +25,7 @@
     p_nid = Drupal.settings.outline_designer.rootNid;
     }
     // standard function to get / set results via AJAX
-    Drupal.outline_designer.ajax_call('core', 'drag_drop', drag_nid, p_nid, weight, null);
+    Drupal.outline_designer.ajax_call('book', 'drag_drop', drag_nid, p_nid, weight, null);
     return null;
   };
   /**
@@ -142,7 +142,7 @@
             // added to integrate with the outline designer
             if(tmpVal != this.value) {
               reweight_nid = this.id.replace('edit-table-book-admin-','').replace('-weight','');
-              Drupal.outline_designer.ajax_call('core', 'reweight', reweight_nid, this.value, null, 'none');
+              Drupal.outline_designer.ajax_call('book', 'reweight', reweight_nid, this.value, null, 'none');
             }
           });
         }

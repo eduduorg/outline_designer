@@ -92,7 +92,7 @@ function outline_designer_book_form_alter(&$form, $form_state, $form_id) {
  * Helper to allow other sub-sub projects to implement this
  */
 function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, $ajax_path) {
-  _outline_designer_setup($ajax_path);
+  _outline_designer_setup($ajax_path, $form['#node']->nid);
   $icon_path = base_path() . drupal_get_path('module', 'outline_designer') . '/images/';
   $unavailableContextMenuItems = _outline_designer_book_get_unavailable($form['#node']->nid, $ajax_path);
   $form['ahah'] = array(
@@ -103,7 +103,7 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
     '#submit' => array(),
     '#ajax' => array(
       'event' => 'change',
-      'path' => $ajax_path . drupal_get_token() . '/core/reload_table/' . $form['#node']->nid,
+      'path' => $ajax_path . drupal_get_token() . '/book/reload_table/' . $form['#node']->nid,
       'wrapper' => 'od-book-edit',
       'method' => 'replace',
       'effect' => 'none',
@@ -118,7 +118,7 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
   // unset things so that the form renders with everything stripped off
   // helps OD work in browsers that respect <enter> button for submitting the whole page/form
   $form["#submit"] = '';
-  $form["#action"] =  $ajax_path . drupal_get_token() . '/core/reload_table/' . $form['#node']->nid;
+  $form["#action"] =  $ajax_path . drupal_get_token() . '/book/reload_table/' . $form['#node']->nid;
   $form["#method"] = 'POST';
   $form["save"] = '';
   $rendered_items = module_invoke_all('outline_designer_form_overlay');
@@ -478,6 +478,32 @@ function outline_designer_book_outline_designer_form_overlay() {
 }
 
 /**
+ * Implementation of hook_outline_designer_operations().
+ */
+function outline_designer_book_outline_designer_operations($type) {
+  // core API invoking functionality
+	switch ($type) {
+    case 'book':
+		  $ops = array(
+			'drag_drop' => array(
+				'title' => '<<OUTLINE_DESIGNER_API_ONLY>>', 
+				'callback' => 'outline_designer_book_process_drag_drop',
+			),
+			'reweight' => array(
+				'title' => '<<OUTLINE_DESIGNER_API_ONLY>>', 
+				'callback' => 'outline_designer_book_process_reweight',
+				),
+			'reload_table' => array(
+				'title' => '<<OUTLINE_DESIGNER_API_ONLY>>', 
+				'callback' => 'outline_designer_book_process_reload_table',
+				),
+			);
+		break;
+	}
+  return $ops;
+}
+
+/**
  * Implements hook_outline_designer_operations_alter().
  */
 function outline_designer_book_outline_designer_operations_alter(&$ops, $type) {
@@ -532,7 +558,7 @@ function outline_designer_book_outline_designer_operations_alter(&$ops, $type) {
 /**
  * Implements hook_outline_designer_ops_js().
  */
-function outline_designer_book_outline_designer_ops_js() {
+function outline_designer_book_outline_designer_ops_js($ajax_path, $nid = NULL) {
   drupal_add_js(drupal_get_path('module', 'outline_designer_book') . '/js/overrides.js', array('scope' => 'header'));
   drupal_add_js(drupal_get_path('module', 'outline_designer_book') . '/js/outline_designer_book.js', array('scope' => 'footer'));
   global $user;
@@ -586,7 +612,7 @@ function outline_designer_book_outline_designer_ops_js() {
       'operations' => _outline_designer_get_operations('book'),
       'activeNid' => '',
       'type' => 'book',
-      'rootNid' => '',
+      'rootNid' => $nid,
       'defaultType' => $default_type,
       'activeType' => $default_type,
     ),
@@ -614,6 +640,7 @@ function outline_designer_book_outline_designer_ops_js() {
  * Callback for add_content ajax call from outline designer.
  */
 function outline_designer_book_process_add_content($title, $type, $parent_nid) {
+	global $user;
   // need to account for the 3 weird characters in URLs
   $title = str_replace("@2@F@", '/', $title);
   $title = str_replace("@2@3@", '#', $title);
@@ -621,8 +648,9 @@ function outline_designer_book_process_add_content($title, $type, $parent_nid) {
   $title = str_replace("@2@6@", '&', $title);
   // set the node
   $node = new stdClass();
-  $node->title = $title;
   $node->type = $type;
+	node_object_prepare($node);
+	$node->title = $title;
   $node->uid = $user->uid;
   // load up the parent of this new item and then copy over the book structure stuff
   $parent = node_load($parent_nid);
@@ -633,14 +661,15 @@ function outline_designer_book_process_add_content($title, $type, $parent_nid) {
   $node->book['module'] = $parent->book['module'];
   // Allow other modules to alter the new book node.
   drupal_alter('new_book_object', $node);
-  if (node_access('create', $node)) {
+  if (node_access('create', $node->type)) {
+		$msg = $parent->book['mlid'] . ';msg:' . t('%type added (nid: %nid)', array('%type' => $node->type, '%nid' => $node->nid));
     node_save($node);
     watchdog('content', '%type: added %title.', array('%type' => $node->type, '%title' => $node->title));
-    return $parent->book['mlid'] . ';msg:' . t('%type added (nid: %nid)', array('%type' => $node->type, '%nid' => $node->nid));
   }
   else {
-    return 0;
+    $msg = 0;
   }
+	return $msg;
 }
 
 /**
@@ -862,4 +891,54 @@ function outline_designer_book_process_change_type($nid, $new_type, $var3) {
   else {
     return 0;
   }
+}
+
+/**
+ * Callback for drag_drop ajax call from outline designer.
+ */
+function outline_designer_book_process_drag_drop($nid, $parent_nid, $weight) {
+	// load the active node
+	$node = node_load($nid);
+	// make sure they can update this node
+	if (node_access('update', $node)) {
+		// load parent
+		$parent = node_load($parent_nid);
+		// set parent
+		$node->book['plid'] = $parent->book['mlid'];
+		$node->book['weight'] = $weight;
+		$node->revision = 1;
+		$node->log = t("Outline Designer -- nid:%nid parent nid changed to %parent_nid", array('%nid' => $nid, '%parent_nid' => $parent_nid));
+		node_save($node);
+		return t("Content position has been updated (nid:%nid)", array('%nid' => $nid));
+	}
+	else {
+		return t("Content position has not been updated due to invalid permissions!");
+	}
+}
+
+/**
+ * Callback for reweight ajax call from outline designer.
+ */
+function outline_designer_book_process_reweight($nid, $weight, $var3) {
+	$node = node_load($nid);
+	// make sure they can update this node
+	if (node_access('update', $node)) {
+		// set parent / weight
+		$node->book['weight'] = $weight;
+		node_save($node);
+		return t("Position has been updated (nid:%nid)", array('%nid' => $nid));
+	}
+	else {
+		return t("Position has not been updated due to invalid permissions!");
+	}
+}
+
+/**
+ * Callback for reload_table ajax call from outline designer.
+ */
+function outline_designer_book_process_reload_table($nid, $var2, $var3) {
+	module_load_include('inc', 'book', 'book.admin');
+	$output = drupal_get_form('book_admin_edit', node_load($nid));
+	drupal_json_output(array('status' => TRUE, 'data' => $output));
+	return '';
 }
