@@ -50,11 +50,11 @@ Drupal.outline_designer.ajax_call = function(type, action, param1, param2, param
       else {
         // allow definition of doing nothing
         if (callback != 'none') {
-          $("#reload_table").trigger('change');
           if(msg == 0) {
             Drupal.outline_designer.growl("You don't have sufficient permissions!");
           }
           else {
+            $("#reload_table").trigger('change');
             Drupal.outline_designer.growl(msg);
           }
         }
