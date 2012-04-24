@@ -26,8 +26,8 @@ function outline_designer_book_init() {
   function od_add_book(){
     window.location="' . base_path() . '?q=node/add/' . variable_get('book_child_type', 'book') . '";
   }
-  $(document).ready(function(){$(".sticky-table").before(' . "'" . '<div style="width:120px;" class="context-menu context-menu-theme-' . variable_get('outline_designer_theme', 'vista') . '"><div title="" class="context-menu-item"><div style="background-image: url(' . base_path() . drupal_get_path('module', 'outline_designer') . '/images/add_content.png);" class="context-menu-item-inner" onclick="od_add_book();">' . t('add book') . '</div></div></div>' . "');
-  });";
+  (function ($) {$(document).ready(function(){$(".sticky-table").before(' . "'" . '<div style="width:120px;" class="context-menu context-menu-theme-' . variable_get('outline_designer_theme', 'vista') . '"><div title="" class="context-menu-item"><div style="background-image: url(' . base_path() . drupal_get_path('module', 'outline_designer') . '/images/add_content.png);" class="context-menu-item-inner" onclick="od_add_book();">' . t('add book') . '</div></div></div>' . "');
+  });})(jQuery);";
     drupal_add_js($js, 'inline');
   }
 }
@@ -155,7 +155,7 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
       }
     }
     drupal_set_message(t('Books need to have at least one piece of content in them in order to work correctly with the outline designer'), 'error');
-    drupal_goto('node/add/' . $default_type, array('query' => array('parent' => '\' . $form[\'#node\']->book[\'mlid\'] . \'', 'destination' => '\' . $_GET[\'q\']')));
+    drupal_goto('node/add/' . $default_type, array('query' => array('parent' => $form['#node']->book['mlid'], 'destination' => $_GET['q'])));
   }
   // check for quick add ability from context options
   if (array_search('add_content', $unavailableContextMenuItems) === FALSE) {
@@ -756,8 +756,9 @@ function outline_designer_book_process_duplicate($nid, $multiple, $dup_title) {
       )
       ->orderBy('depth', 'asc')
       ->execute();
+      
       foreach ($result as $value) {
-        $dup_node = node_load(str_replace('node/', '', $value['link_path']));
+        $dup_node = node_load(str_replace('node/', '', $value->link_path));
         $orig_node = $dup_node;
         $current_nid = $dup_node->nid;
         $old_nid = $dup_node->nid;
@@ -765,7 +766,6 @@ function outline_designer_book_process_duplicate($nid, $multiple, $dup_title) {
         $dup_node->created = NULL;
         $dup_node->path = NULL;
         $dup_node->uid = $user->uid;
-        $dup_node->revision = 1;
         // swap out the title
         $dup_node->title = str_replace('@title', $dup_node->title, $dup_title);
         $old_mlid = $dup_node->book['mlid'];
