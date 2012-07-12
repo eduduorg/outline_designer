@@ -61,7 +61,7 @@ function _outline_child_pages_access($node, $type) {
   global $user;
   if (isset($node->nid)) {
     if (function_exists('outline_designer_og_menu')) {
-      if (variable_get('outline_child_pages_type', 'tab') == $type && ($user->uid == 1 || og_is_group_admin($node, $user) || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
+      if (variable_get('outline_child_pages_type', 'tab') == $type && ($user->uid == 1 || og_user_access($node, 'administer group') || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
         $has_children = db_query('SELECT ml.has_children FROM {book} b INNER JOIN {menu_links} ml ON b.mlid = ml.mlid WHERE b.nid = :b.nid', array(':b.nid' => $node->nid))->fetchField();
         return $has_children;
       }
@@ -90,7 +90,7 @@ function _outline_child_pages_access_link($node, $type) {
   $has_children = db_query('SELECT ml.has_children FROM {book} b INNER JOIN {menu_links} ml ON b.mlid = ml.mlid WHERE b.nid = :b.nid', array(':b.nid' => $node->nid))->fetchField();
   // account for og helper
   if (function_exists('outline_designer_og_menu')) {
-    if (variable_get('outline_child_pages_type', 'link') == $type && ($user->uid == 1 || og_is_group_admin($node, $user) || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
+    if (variable_get('outline_child_pages_type', 'link') == $type && ($user->uid == 1 || og_user_access($node, 'administer group') || user_access('administer book outlines') || (user_access('outline own pages') && user_access('add content to books') && node_access('update', $node)))) {
       return $has_children;
     }
     else {

@@ -84,7 +84,7 @@ function _outline_designer_og_books_access($node) {
     return 1;
   }
 
-  if (!og_is_group_admin($node, $user)) {
+  if (!og_user_access($node, 'administer group')) {
     return 0;
   }
 
@@ -100,7 +100,7 @@ function _outline_designer_og_book_access($node) {
   $group_nodes = og_get_node_groups($node);
   $is_group_admin = FALSE;
   foreach ($group_nodes as $nid => $title) {
-    if (og_is_group_admin(node_load($nid), $user)) {
+    if (og_user_access(node_load($nid), 'administer group')) {
       $is_group_admin = TRUE;
     }
   }
