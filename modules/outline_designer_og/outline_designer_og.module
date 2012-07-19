@@ -64,8 +64,7 @@ function _outline_designer_og_ajax_access() {
 
 function _outline_designer_og_books_access($node) {
   global $user;
-
-  if (!og_is_group_type($node->type)) {
+  if (!og_is_group_type('group', $node->type)) {
     return 0;
   }
 
@@ -84,7 +83,7 @@ function _outline_designer_og_books_access($node) {
     return 1;
   }
 
-  if (!og_user_access($node, 'administer group')) {
+  if (!og_is_group_admin($node, $user)) {
     return 0;
   }
 
@@ -100,7 +99,7 @@ function _outline_designer_og_book_access($node) {
   $group_nodes = og_get_node_groups($node);
   $is_group_admin = FALSE;
   foreach ($group_nodes as $nid => $title) {
-    if (og_user_access(node_load($nid), 'administer group')) {
+    if (og_is_group_admin(node_load($nid), $user)) {
       $is_group_admin = TRUE;
     }
   }
