@@ -210,7 +210,8 @@ function _outline_designer_book_settings($form_state) {
   }
   // create it just incase and make sure it's writable
   $file_dir_path = variable_get('file_' . file_default_scheme() . '_path', conf_path() . '/files');
-  $dir = drupal_realpath(file_default_scheme() . '://outline_designer');  file_prepare_directory($dir, 1);
+  $dir = drupal_realpath(file_default_scheme() . '://outline_designer');
+  file_prepare_directory($dir, 1);
   // make sure it can be opened
   $uploaded_icons = '';
   if ($handle = opendir('./' . $file_dir_path. '/outline_designer')) {
@@ -227,7 +228,7 @@ function _outline_designer_book_settings($form_state) {
     '#title' => t('Context menu'),
     '#collapsed' => FALSE,
     '#collapsible' => TRUE,
-    '#description' => 'The selected items will appear in the Outline Designer context menu, depending on the user\'s roles. Users with several roles will cumulate the roles settings.<br />WARNING: only roles with permission \'use outline designer \' and \'administer book outlines\' or group admins (if outline_designer_og is activated) will be able to utilize these settings.',
+    '#description' => 'The selected items will appear in the Outline Designer context menu, depending on the user\'s roles. Users with several roles will cumulate the roles settings.<br />Only roles with permission \'use outline designer \' and \'administer book outlines\' or group admins (if outline_designer_og is activated) will be able to utilize these settings.',
     '#theme' => 'outline_designer_context_menu_items_matrix',
   );
   $roles = user_roles(TRUE);
@@ -260,9 +261,7 @@ function _outline_designer_book_settings($form_state) {
     '#collapsible' => TRUE,
   );
   $form["packaged_icons"]["packaged"] = array(
-    '#type' => 'markup',
-    '#title' => 'packaged',
-    '#value' => $packaged_icons,
+    '#markup' => $packaged_icons,
   );
   $form["uploaded_icons"] = array(
     '#type' => 'fieldset',
@@ -271,8 +270,7 @@ function _outline_designer_book_settings($form_state) {
     '#collapsible' => TRUE,
   );
   $form["uploaded_icons"]["uploaded"] = array(
-    '#type' => 'markup',
-    '#value' => $uploaded_icons,
+    '#markup' => $uploaded_icons,
   );
   $result = db_select('node_type', 'nt')
   ->fields('nt', array('type', 'name'))
@@ -333,7 +331,7 @@ function _outline_designer_book_settings_submit($form, &$form_state) {
     if (drupal_substr($item, 0, 1) != "#") {
       $item_checkboxes = $form["context_menu"]["checkboxes"][$item];
       foreach ($item_checkboxes as $cb_name => $cb_properties) {
-        if ($cb_properties['#type'] == 'checkbox' && !in_array($cb_name, $checkboxes)) {
+        if (isset($cb_properties['#type']) && $cb_properties['#type'] == 'checkbox' && !in_array($cb_name, $checkboxes)) {
           $items_unchecked[$cb_properties['#return_value']['rid']][$cb_properties['#return_value']['operation']]['unchecked'] = TRUE;
         }
       }
@@ -341,17 +339,13 @@ function _outline_designer_book_settings_submit($form, &$form_state) {
   }
   variable_set('outline_designer_context_menu_exclusion_matrix', array_filter($items_unchecked));
 
-  // store the checkbox value
-  variable_set('outline_designer_collapse_toggle', $form_state['values']["outline_designer_collapse_toggle"]);
-  // store theme selected
-  variable_set('outline_designer_theme', $form_state['values']["outline_designer_theme"]);
   // take into account outline child pages
   if (function_exists('outline_child_pages_menu')) {
     variable_set('outline_child_pages_type', $form_state['values']["outline_child_pages_type"]);
   }
   // the rest is for files
-  $dir = file_create_path($file_dir_path. '/outline_designer');
-  $is_writable = file_prepare_directory($dir,   1);
+  $dir = drupal_realpath(file_default_scheme() . '://outline_designer');
+  $is_writable = file_prepare_directory($dir, 1);
   if ($is_writable) {
     $validators = array(
       'file_validate_is_image' => array(),
@@ -379,7 +373,7 @@ function _outline_designer_book_settings_submit($form, &$form_state) {
         }
         // clean up the string incase those other two didn't do the trick
         $icon = drupal_substr($icon, strpos($icon, drupal_get_path('module', 'outline_designer')));
-        $icon = drupal_substr($icon, strpos($icon, file_directory_path()));
+        $icon = drupal_substr($icon, strpos($icon, $dir));
         // potentially this isn't a valid icon path on our server...need to still check this
         variable_set("outline_designer_" . $value->type . "_icon",   $icon);
       }
