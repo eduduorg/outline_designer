@@ -4,6 +4,18 @@
  #reload_table {
   display:none; 
  }
+ #book-outline th:not(:first-child){
+  display:none; 
+ }
+ tr.draggable td:not(:first-child) {
+  display:none; 
+ }
+ tr.draggable td:first-child {
+  width:800px;
+ }
+ #book-outline div.form-type-textfield input {
+   display:none;
+ }
  #od_popup_toolbox {
   display:none; 
   text-align:left;
