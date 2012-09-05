@@ -290,7 +290,7 @@ function theme_outline_designer_context_menu_items_matrix($variables) {
   foreach (element_children($form["checkboxes"]) as $item_name) {
     $trow = array();
     foreach ($roles as $rid => $role) {
-      $trow[] = drupal_render_children($form["checkboxes"][$item_name]["outline_designer_context_menu_" . $item_name . "_" . $rid]);
+      $trow[] = drupal_render($form["checkboxes"][$item_name]["outline_designer_context_menu_" . $item_name . "_" . $rid]);
     }
     $rows[] = $trow;
   }
