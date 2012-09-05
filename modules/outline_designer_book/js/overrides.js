@@ -3,29 +3,7 @@
    * Overload tabledrag onDrop event so that it ajax saves the new parent for the node
    */
   Drupal.tableDrag.prototype.onDrop = function() {
-    //get the id of what was dragged
-    var drag_img_id = this.rowObject.element.children[0].children[2].id;
-    var drag_nid = drag_img_id.replace('node-','').replace('-icon','');
-    //get the parent id based on the indentations, this equation is a bit evil...
-    var p_nid;
-    var row_obj = $('#'+ drag_img_id).parent().parent();
-    var weight = $("#edit-table-book-admin-"+ drag_nid +"-weight").val();
-    var active_indent = Math.max($('.indentation', row_obj).size());
-    //if we're at level 0 then the node is at the book root
-    if(active_indent != 0){
-    var tmp_indent = -1;
-    var tmp_obj = row_obj;
-    //keep walking backwards until we find the node we need
-    while (tmp_indent != (active_indent-1) ) {
-      tmp_obj = $(tmp_obj).prev();
-      tmp_indent = Math.max($('.indentation', tmp_obj).size());
-    }
-    p_nid = $(tmp_obj).find('img').attr('id').replace('node-','').replace('-icon','');
-    } else {
-    p_nid = Drupal.settings.outline_designer.rootNid;
-    }
-    // standard function to get / set results via AJAX
-    Drupal.outline_designer.ajax_call('book', 'drag_drop', drag_nid, p_nid, weight, null);
+    $("#reload_table").trigger('change');
     return null;
   };
   /**
@@ -141,8 +119,7 @@
             }
             // added to integrate with the outline designer
             if(tmpVal != this.value) {
-              reweight_nid = this.id.replace('edit-table-book-admin-','').replace('-weight','');
-              Drupal.outline_designer.ajax_call('book', 'reweight', reweight_nid, this.value, null, 'none');
+              $("#reload_table").trigger('change');
             }
           });
         }

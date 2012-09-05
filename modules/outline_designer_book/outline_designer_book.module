@@ -95,49 +95,34 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
   _outline_designer_setup($ajax_path, $form['#node']->nid);
   $icon_path = base_path() . drupal_get_path('module', 'outline_designer') . '/images/';
   $unavailableContextMenuItems = _outline_designer_book_get_unavailable($form['#node']->nid, $ajax_path);
-  $form['ahah'] = array(
+  $form['ajax'] = array(
     '#type' => 'submit',
     '#id' => 'reload_table',
-    '#value' => t('AHAH submit'),
+    '#value' => t('AJAX submit'),
     '#weight' => 1,
     '#submit' => array(),
     '#ajax' => array(
       'event' => 'change',
-      'path' => $ajax_path . drupal_get_token() . '/book/reload_table/' . $form['#node']->nid,
-      'wrapper' => 'od-book-edit',
-      'method' => 'replace',
+      'callback' => 'outline_designer_book_admin_edit',
+      'wrapper' => 'book-admin-edit',
+      'method' => 'replaceWith',
       'effect' => 'none',
       'progress' => array(
         'type' => 'throbber',
-        'message' => t('Loading..'),
+        'message' => t('Saving..'),
       ),
     ),
   );  
 
   $od_path = drupal_get_path('module', 'outline_designer');
   // unset things so that the form renders with everything stripped off
-  // helps OD work in browsers that respect <enter> button for submitting the whole page/form
   $form["#submit"] = '';
-  $form["#action"] =  $ajax_path . drupal_get_token() . '/book/reload_table/' . $form['#node']->nid;
-  $form["#method"] = 'POST';
   $form["save"] = '';
   $rendered_items = module_invoke_all('outline_designer_form_overlay');
   $render = implode('', $rendered_items);
-  $form["#suffix"] = theme('outline_designer_overlay_suffix', array('render' => $render));
+  $form["table"]['#suffix'] = theme('outline_designer_overlay_suffix', array('render' => $render));
   $base_path = base_path();
   $count = 0;
-  foreach ($form['table'] as $key => $row) {
-    $count++;
-    if ($key != '#theme' && $key != '#tree') {
-      $tmpnid = $row['nid']['#value'];
-      $type = db_query("SELECT type FROM {node} WHERE nid = :nid", array(':nid' => $tmpnid))->fetchField();
-      $form['table'][$key]['title']['#prefix'] = theme('outline_designer_prefix', array('type' => $type, 'nid' => $tmpnid, 'icon_path' => $icon_path));
-      // if this has kids then give it a drop down
-      if ($form['table'][$key]['#item']['has_children'] == 1) {
-        $form['table'][$key]['title']['#suffix'] = theme('outline_designer_suffix', array('nid' => $tmpnid, 'icon_path' => $icon_path));
-      }
-    }
-  }
   // this is to trap for a goofy Drupal js error that's core
   if ($count == 2) {
     // Select only those that the book module say can be outlined
@@ -486,10 +471,6 @@ function outline_designer_book_outline_designer_operations($type) {
       'reweight' => array(
         'title' => '<<OUTLINE_DESIGNER_API_ONLY>>', 
         'callback' => 'outline_designer_book_process_reweight',
-        ),
-      'reload_table' => array(
-        'title' => '<<OUTLINE_DESIGNER_API_ONLY>>', 
-        'callback' => 'outline_designer_book_process_reload_table',
         ),
       );
     break;
@@ -930,9 +911,77 @@ function outline_designer_book_process_reweight($nid, $weight, $var3) {
 /**
  * Callback for reload_table ajax call from outline designer.
  */
-function outline_designer_book_process_reload_table($nid, $var2, $var3) {
-  module_load_include('inc', 'book', 'book.admin');
-  $output = drupal_get_form('book_admin_edit', node_load($nid));
-  drupal_json_output(array('status' => TRUE, 'data' => $output));
-  return '';
+function outline_designer_book_admin_edit($form, &$form_state) {
+  // submit the grid we were passed
+  book_admin_edit_submit($form, $form_state);
+  // build the new edit form
+  //$form = book_admin_edit(array(), $form_state, $form['#node']);
+  // apply outline designer interfacing
+  //_outline_designer_book_admin_form_alter($form, $form_state, 'book_admin_edit', 'outline_designer/ajax/');
+	$form = drupal_build_form('book_admin_edit', $form_state);
+  return $form;
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function outline_designer_book_theme_registry_alter(&$theme_registry) {
+  $theme_registry['book_admin_table']['function'] = 'theme_outline_designer_book_admin_table';
+}
+
+/**
+ * Theme override for book_admin_table
+ */
+function theme_outline_designer_book_admin_table($variables) {
+  $form = $variables['form'];
+
+  drupal_add_tabledrag('book-outline', 'match', 'parent', 'book-plid', 'book-plid', 'book-mlid', TRUE, MENU_MAX_DEPTH - 2);
+  drupal_add_tabledrag('book-outline', 'order', 'sibling', 'book-weight');
+
+  $header = array(t('Title'), t('Weight'), t('Parent'), t('Operations'));
+
+  $rows = array();
+  $destination = drupal_get_destination();
+  $access = user_access('administer nodes');
+  foreach (element_children($form) as $key) {
+    $nid = $form[$key]['nid']['#value'];
+    $href = $form[$key]['href']['#value'];
+
+    // Add special classes to be used with tabledrag.js.
+    $form[$key]['plid']['#attributes']['class'] = array('book-plid');
+    $form[$key]['mlid']['#attributes']['class'] = array('book-mlid');
+    $form[$key]['weight']['#attributes']['class'] = array('book-weight');
+    // append icons
+    $icon_path = base_path() . drupal_get_path('module', 'outline_designer') . '/images/';
+    $type = db_query("SELECT type FROM {node} WHERE nid = :nid", array(':nid' => $nid))->fetchField();
+      $form[$key]['title']['#prefix'] = theme('outline_designer_prefix', array('type' => $type, 'nid' => $nid, 'icon_path' => $icon_path));    
+    // if this has kids then give it a drop down
+    if ($form[$key]['#item']['has_children'] == 1) {
+      $form[$key]['title']['#suffix'] = theme('outline_designer_suffix', array('nid' => $nid, 'icon_path' => $icon_path));
+    }
+    if (isset($form[$key]['title']['#value'])) {
+      $title = $form[$key]['title']['#value'];
+    }
+    else {
+      $title = '';
+    }
+    // append span automatically instead of post render
+    $form[$key]['title']['#field_suffix'] = '<span id="edit-table-book-admin-'. $nid .'-title-span" class="od_title_span">'. $title .'</span>';
+    $data = array(
+      theme('indentation', array('size' => $form[$key]['depth']['#value'] - 2)) . drupal_render($form[$key]['title']),
+      drupal_render($form[$key]['weight']),
+      drupal_render($form[$key]['plid']) . drupal_render($form[$key]['mlid']),
+      l(t('view'), $href),
+      $access ? l(t('edit'), 'node/' . $nid . '/edit', array('query' => $destination)) : '&nbsp;',
+      $access ? l(t('delete'), 'node/' . $nid . '/delete', array('query' => $destination) )  : '&nbsp;',
+    );
+    $row = array('data' => $data);
+    if (isset($form[$key]['#attributes'])) {
+      $row = array_merge($row, $form[$key]['#attributes']);
+    }
+    $row['class'][] = 'draggable';
+    $rows[] = $row;
+  }
+
+  return theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'book-outline')));
 }

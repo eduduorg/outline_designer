@@ -3,10 +3,6 @@
 /**
  * events to update interface
  */
-$(document).ready(function() {
-  //due to a previous glitch that loaded inefficiently, this will force it to only load once
-  $('#book-outline').parent().attr('id','od-book-edit');
- });
 
 /**
  * behaviors specific to the outline designer for overloading functions
@@ -35,24 +31,15 @@ Drupal.behaviors.outline_designer_book = {
     Drupal.settings.outline_designer.activeNid = $(this).attr('id').replace("-"," ").substring(5);
     
   });
-  $("tr.draggable td").each(function(i){
-    if((i+1) % 6 == 0 || (i+1) % 6 == 4 || (i+1) % 6 == 5) {
-    this.style.display = 'none';
-    }
-  });  
-  //replace text fields with span's w/ their same content
-  $("#book-outline .form-text", context).each(function(){
-    $(this).css('display','none');
-    $(this).parent().append('<span id="'+ $(this).attr('id') +'-span">' + $(this).val() + '</span>');
-  });
   //whenever you doubleclick on a title, switch it to the rename state
-  $("#book-outline span").bind('dblclick',function(e){
+  $("#book-outline span.od_title_span").bind('dblclick',function(e){
     Drupal.settings.outline_designer.activeNid = $(this).attr('id').replace("edit-table-book-admin-","").replace("-title-span","");
     Drupal.outline_designer.form_render('rename');
+    $('#'+ $(this).attr('id').replace("-span","")).css('display', 'block');
   });
   //whenever you aren't active on a field, remove it
-  $('#book-outline input').blur(function(){
-    $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').css('display','');
+  $('#book-outline div.form-type-textfield input').blur(function(){
+    $(this).next().children().css('display', 'block');
   $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').val($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html());
   $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').css('display','none');
   });
