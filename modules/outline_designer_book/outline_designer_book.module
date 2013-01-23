@@ -83,7 +83,12 @@ function _outline_designer_book_get_unavailable($nid, $ajax_path) {
  * Implements hook_form_alter().
  */
 function outline_designer_book_form_alter(&$form, $form_state, $form_id) {
-  if ($form_id == 'book_admin_edit' && (arg(0) == "admin" || (arg(0) == 'outline_designer' && arg(1) == 'ajax'))) {
+  if ($form_id == 'book_admin_edit' && (arg(0) == "admin" || (arg(1) == 'ajax'))) {
+    // target and unset book
+    if (is_array($form['#validate'])) {
+      $key = array_search('book_admin_edit_validate', $form['#validate']);
+      unset($form['#validate'][$key]);
+    }
     _outline_designer_book_admin_form_alter($form, $form_state, $form_id, 'outline_designer/ajax/');
   }
 }
@@ -92,7 +97,10 @@ function outline_designer_book_form_alter(&$form, $form_state, $form_id) {
  * Helper to allow other sub-sub projects to implement this
  */
 function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, $ajax_path) {
-  _outline_designer_setup($ajax_path, $form['#node']->nid);
+  //TODO, this is very close to working!
+  if (arg(1) != 'ajax') {
+    _outline_designer_setup($ajax_path, $form['#node']->nid);
+  }
   $icon_path = base_path() . drupal_get_path('module', 'outline_designer') . '/images/';
   $unavailableContextMenuItems = _outline_designer_book_get_unavailable($form['#node']->nid, $ajax_path);
   $form['ajax'] = array(
@@ -104,15 +112,15 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
     '#ajax' => array(
       'event' => 'change',
       'callback' => 'outline_designer_book_admin_edit',
-      'wrapper' => 'book-admin-edit',
-      'method' => 'replaceWith',
+      'wrapper' => 'ajax_table_replacement',
+      'method' => 'replace',
       'effect' => 'none',
       'progress' => array(
         'type' => 'throbber',
         'message' => t('Saving..'),
       ),
     ),
-  );  
+  );
 
   $od_path = drupal_get_path('module', 'outline_designer');
   // unset things so that the form renders with everything stripped off
@@ -120,7 +128,7 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
   $form["save"] = '';
   $rendered_items = module_invoke_all('outline_designer_form_overlay');
   $render = implode('', $rendered_items);
-  $form["table"]['#suffix'] = theme('outline_designer_overlay_suffix', array('render' => $render));
+  $form["table"]['#suffix'] = '</div>' . theme('outline_designer_overlay_suffix', array('render' => $render));
   $base_path = base_path();
   $count = 0;
   // this is to trap for a goofy Drupal js error that's core
@@ -150,6 +158,7 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
     $can_add = FALSE;
   }
   $form['table']['#prefix'] = theme('outline_designer_ui_prefix', array('nid' => $form['#node']->nid, 'icon_path' => $icon_path, 'can_add' => $can_add));
+  $form['table']['#prefix'] .= '<div id="ajax_table_replacement">';
 }
 
 
@@ -675,6 +684,7 @@ function outline_designer_book_process_rename($nid, $newtitle, $var3) {
  * Callback for duplicate ajax call from outline designer.
  */
 function outline_designer_book_process_duplicate($nid, $multiple, $dup_title) {
+  global $user;
   // need to account for the 3 weird characters in URLs
   $dup_title = str_replace("@2@F@", '/', $dup_title);
   $dup_title = str_replace("@2@3@", '#', $dup_title);
@@ -912,13 +922,17 @@ function outline_designer_book_process_reweight($nid, $weight, $var3) {
  * Callback for reload_table ajax call from outline designer.
  */
 function outline_designer_book_admin_edit($form, &$form_state) {
-  // submit the grid we were passed
+  // submit the table we were passed
   book_admin_edit_submit($form, $form_state);
+  // reset the static representation of the tree
+  drupal_static_reset('book_menu_subtree_data');
+  // clear caches related to this book / menu tree
+  $cid = 'links:' . $form['#node']->book['menu_name'];
+  cache_clear_all($cid, 'cache_menu', TRUE);
+  //$form_state['cache'] = FALSE;
+  //$form_state['rebuild'] = TRUE;
   // build the new edit form
-  //$form = book_admin_edit(array(), $form_state, $form['#node']);
-  // apply outline designer interfacing
-  //_outline_designer_book_admin_form_alter($form, $form_state, 'book_admin_edit', 'outline_designer/ajax/');
-	$form = drupal_build_form('book_admin_edit', $form_state);
+  $form = drupal_rebuild_form('book_admin_edit', $form_state, $form);
   return $form;
 }
 

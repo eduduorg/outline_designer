@@ -10,7 +10,7 @@
 Drupal.behaviors.outline_designer_book = {
     attach: function (context, settings) {
   //collapse / expand functionality
-  $('.od-toggle-open').bind('click', function(e){
+  $('.od-toggle-open', context).bind('click', function(e){
     if ($(this).attr('alt') == 'open') {
       $(this).attr('alt','closed');
       $(this).attr('src',$(this).attr('src').replace('images/open.png','images/closed.png'));
@@ -27,21 +27,20 @@ Drupal.behaviors.outline_designer_book = {
     }
   });
   //set the active node id everytime an edit icon is clicked on
-  $('.outline_designer_edit_button').bind('click',function(e){
-    Drupal.settings.outline_designer.activeNid = $(this).attr('id').replace("-"," ").substring(5);
-    
+  $('.outline_designer_edit_button', context).bind('click',function(e){
+    Drupal.settings.outline_designer.activeNid = $(this).attr('id').replace("-"," ").substring(5);    
   });
   //whenever you doubleclick on a title, switch it to the rename state
-  $("#book-outline span.od_title_span").bind('dblclick',function(e){
+  $("#book-outline span.od_title_span", context).bind('dblclick',function(e){
     Drupal.settings.outline_designer.activeNid = $(this).attr('id').replace("edit-table-book-admin-","").replace("-title-span","");
     Drupal.outline_designer.form_render('rename');
-    $('#'+ $(this).attr('id').replace("-span","")).css('display', 'block');
+    $(this).parent().prev().css('display', 'block');
   });
   //whenever you aren't active on a field, remove it
-  $('#book-outline div.form-type-textfield input').blur(function(){
+  $('#book-outline div.form-type-textfield input', context).blur(function(){
     $(this).next().children().css('display', 'block');
-  $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').val($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html());
-  $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').css('display','none');
+	  $(this).val(Drupal.outline_designer_ops.active('span').html());
+  	$(this).css('display','none');
   });
   //if you hit enter, submit the title; if you hit esc then reset the field
   $('form').submit( function(){
@@ -56,9 +55,9 @@ Drupal.behaviors.outline_designer_book = {
         return false;
       }  
       if(e.keyCode == 27){  // ESC pressed
-      $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').css('display','');
-  $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').val($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html());
-  $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').css('display','none');
+				Drupal.outline_designer_ops.active('span').css('display','');
+				Drupal.outline_designer_ops.active('input').val(Drupal.outline_designer_ops.active('span').html());
+				Drupal.outline_designer_ops.active('input').blur();
       }
     });
     //bind the context menu and set it's properties
@@ -98,7 +97,7 @@ Drupal.behaviors.outline_designer_book = {
   };
 
 Drupal.outline_designer.get_active_title = function() {
-  return $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html();
+  return Drupal.outline_designer_ops.active('span').html();
 };
 
 Drupal.outline_designer.get_active_type = function() {
@@ -162,9 +161,9 @@ Drupal.outline_designer.render_popup = function(render_title) {
   };
   // define function for rename
   Drupal.outline_designer_ops.rename = function() {
-    $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').css('display','none');
-    $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').css('display','');
-    $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').focus();
+    Drupal.outline_designer_ops.active('span').css('display','none');
+    Drupal.outline_designer_ops.active('input').css('display','');
+    Drupal.outline_designer_ops.active('input').focus();
   };
   // define function for change_type
   Drupal.outline_designer_ops.change_type = function() {
@@ -200,10 +199,10 @@ Drupal.outline_designer.render_popup = function(render_title) {
   Drupal.outline_designer_ops.edit_submit = function() {};
   Drupal.outline_designer_ops.view_submit = function() {};
   Drupal.outline_designer_ops.rename_submit = function() {
-    $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').css('display','');
-    $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').css('display','none');
-    if ($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title-span').html() != $('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title').val()) {
-      var title = $.param($('#edit-table-book-admin-' + Drupal.settings.outline_designer.activeNid + '-title'));
+    Drupal.outline_designer_ops.active('span').css('display','');
+    Drupal.outline_designer_ops.active('input').css('display','none');
+    if (Drupal.outline_designer_ops.active('span').html() != Drupal.outline_designer_ops.active('input').val()) {
+      var title = $.param(Drupal.outline_designer_ops.active('input'));
       var titleary = title.split('=',1);
       //need to remove the name space
       title = title.replace(titleary,'');
@@ -321,4 +320,14 @@ Drupal.outline_designer.render_popup = function(render_title) {
 });
     }
   };
+	// establish active item
+	Drupal.outline_designer_ops.active = function(return_item) {
+		var obj = $("input[name='table[book-admin-" + Drupal.settings.outline_designer.activeNid + "][title]']");
+		if (return_item == 'input') {
+			return obj;
+		}
+		else {
+			return obj.next().children('span');
+		}
+	};
 })(jQuery);
