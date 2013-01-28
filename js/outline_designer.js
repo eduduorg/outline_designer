@@ -51,11 +51,9 @@ Drupal.outline_designer.ajax_call = function(type, action, param1, param2, param
         // allow definition of doing nothing
         if (callback != 'none') {
           if(msg == 0) {
-            Drupal.outline_designer.growl("You don't have sufficient permissions!");
           }
           else {
             $("#reload_table").trigger('change');
-            Drupal.outline_designer.growl(msg);
           }
         }
       }
@@ -132,15 +130,6 @@ Drupal.outline_designer.ui_reset = function() {
   var functionName = 'Drupal.outline_designer_ops.'+ Drupal.settings.outline_designer.activeAction +'_reset';
   // call "user defined" function
   Drupal.outline_designer.executeFunctionByName(functionName, window);
-};
-
-Drupal.outline_designer.growl_helper = function() {
-  $(".od_msg:last").remove();
-};
-
-Drupal.outline_designer.growl = function(msg) {
-  $("#od_growl").prepend('<div class="od_msg messages status">' + msg + '</div>');  
-  setTimeout(Drupal.outline_designer.growl_helper, 2000);
 };
 
 Drupal.outline_designer.get_active_title = function() {
