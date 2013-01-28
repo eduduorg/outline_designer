@@ -39,8 +39,8 @@ Drupal.behaviors.outline_designer_book = {
   //whenever you aren't active on a field, remove it
   $('#book-outline div.form-type-textfield input', context).blur(function(){
     $(this).next().children().css('display', 'block');
-	  $(this).val(Drupal.outline_designer_ops.active('span').html());
-  	$(this).css('display','none');
+    $(this).val(Drupal.outline_designer_ops.active('span').html());
+    $(this).css('display','none');
   });
   //if you hit enter, submit the title; if you hit esc then reset the field
   $('form').submit( function(){
@@ -55,9 +55,9 @@ Drupal.behaviors.outline_designer_book = {
         return false;
       }  
       if(e.keyCode == 27){  // ESC pressed
-				Drupal.outline_designer_ops.active('span').css('display','');
-				Drupal.outline_designer_ops.active('input').val(Drupal.outline_designer_ops.active('span').html());
-				Drupal.outline_designer_ops.active('input').blur();
+        Drupal.outline_designer_ops.active('span').css('display','');
+        Drupal.outline_designer_ops.active('input').val(Drupal.outline_designer_ops.active('span').html());
+        Drupal.outline_designer_ops.active('input').blur();
       }
     });
     //bind the context menu and set it's properties
@@ -221,13 +221,6 @@ Drupal.outline_designer.render_popup = function(render_title) {
   // callback function for change type submit
   Drupal.outline_designer_ops.change_type_submit_success = function(msg) {
     $("#reload_table").trigger('change');
-    if(msg == 0) {
-      Drupal.outline_designer.growl("You don't have sufficient permissions!");
-    }
-    else {
-      $("#node-" + Drupal.settings.outline_designer.activeNid +"-icon").attr('src',Drupal.settings.basePath + Drupal.settings.outline_designer.types[Drupal.settings.outline_designer.activeType][1]);
-      Drupal.outline_designer.growl(msg);
-    }
   };
   Drupal.outline_designer_ops.duplicate_submit = function() {
     var dup_title = $.param($("#od_duplicate_title"));
@@ -263,19 +256,7 @@ Drupal.outline_designer.render_popup = function(render_title) {
   };
   // callback function for add_content submit
   Drupal.outline_designer_ops.add_content_submit_success = function(msg) {
-    var msg_split = new RegExp(";msg:");
-    msg_split.test(msg);
-    msg = RegExp.rightContext;
-    if ($.inArray('collapse-'+ Drupal.settings.outline_designer.activeNid, Drupal.settings.outline_designer.collapseList) != -1) {
-      Drupal.settings.outline_designer.collapseList.splice($.inArray('collapse-'+ Drupal.settings.outline_designer.activeNid, Drupal.settings.outline_designer.collapseList), 1);
-    }
     $("#reload_table").trigger('change');
-    if(msg == 0) {
-      Drupal.outline_designer.growl("You don't have permissions to add this content");
-    }
-    else {
-      Drupal.outline_designer.growl(msg);
-    }
   };
   Drupal.outline_designer_ops.delete_submit = function() {
     var multiple = $('#od_delete_multiple:checked').length;
@@ -320,14 +301,14 @@ Drupal.outline_designer.render_popup = function(render_title) {
 });
     }
   };
-	// establish active item
-	Drupal.outline_designer_ops.active = function(return_item) {
-		var obj = $("input[name='table[book-admin-" + Drupal.settings.outline_designer.activeNid + "][title]']");
-		if (return_item == 'input') {
-			return obj;
-		}
-		else {
-			return obj.next().children('span');
-		}
-	};
+  // establish active item
+  Drupal.outline_designer_ops.active = function(return_item) {
+    var obj = $("input[name='table[book-admin-" + Drupal.settings.outline_designer.activeNid + "][title]']");
+    if (return_item == 'input') {
+      return obj;
+    }
+    else {
+      return obj.next().children('span');
+    }
+  };
 })(jQuery);
