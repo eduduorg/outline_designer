@@ -128,7 +128,7 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
   $form["save"] = '';
   $rendered_items = module_invoke_all('outline_designer_form_overlay');
   $render = implode('', $rendered_items);
-  $form["table"]['#suffix'] = '</div>' . theme('outline_designer_overlay_suffix', array('render' => $render));
+  $form["table"]['#suffix'] = theme('outline_designer_overlay_suffix', array('render' => $render));
   $base_path = base_path();
   $count = 0;
   // this is to trap for a goofy Drupal js error that's core
@@ -158,7 +158,8 @@ function _outline_designer_book_admin_form_alter(&$form, $form_state, $form_id, 
     $can_add = FALSE;
   }
   $form['table']['#prefix'] = theme('outline_designer_ui_prefix', array('nid' => $form['#node']->nid, 'icon_path' => $icon_path, 'can_add' => $can_add));
-  $form['table']['#prefix'] .= '<div id="ajax_table_replacement">';
+  $form['#prefix'] = '<div id="ajax_table_replacement">';
+  $form['#suffix'] = '</div>';
 }
 
 
@@ -646,14 +647,13 @@ function outline_designer_book_process_add_content($title, $type, $parent_nid) {
   // Allow other modules to alter the new book node.
   drupal_alter('new_book_object', $node);
   if (node_access('create', $node->type)) {
-    $msg = $parent->book['mlid'] . ';msg:' . t('%type added (nid: %nid)', array('%type' => $node->type, '%nid' => $node->nid));
     node_save($node);
+    drupal_set_message(t('%title (%type) added (nid: %nid)', array('%title' => $node->title, '%type' => $node->type, '%nid' => $node->nid)));
     watchdog('content', '%type: added %title.', array('%type' => $node->type, '%title' => $node->title));
+    return 1;
   }
-  else {
-    $msg = 0;
-  }
-  return $msg;
+  drupal_set_message(t('Content creation access denied!'));
+  return 0;
 }
 
 /**
@@ -667,17 +667,19 @@ function outline_designer_book_process_rename($nid, $newtitle, $var3) {
   $newtitle = str_replace("@2@6@", '&', $newtitle);
   $node = node_load($nid);
   if (node_access('update', $node)) {
-    $node->log = t("Outline Designer -- node renamed from %title to %newtitle", array('%title' => $node->title, '%newtitle' => $newtitle));
-    $msg = t("Outline Designer -- node %nid renamed from %title to %newtitle", array('%nid' => $nid, '%title' => $node->title, '%newtitle' => $newtitle));
+    $msg = t("Outline Designer -- node renamed from %title to %newtitle", array('%title' => $node->title, '%newtitle' => $newtitle));
+    $node->log = $msg;
     watchdog('content', $msg);
     $oldtitle = $node->title;
     $node->title = $newtitle;
     $node->revision = 1;
     node_save($node);
-    return t("Content renamed from %title to %newtitle", array('%title' => $oldtitle, '%newtitle' => $newtitle));
+    drupal_set_message(t("Content renamed from %title to %newtitle", array('%title' => $oldtitle, '%newtitle' => $newtitle)));
+    return 1;
   }
   else {
-    return t("You don't have permissions to rename this content");
+    drupal_set_message(t("You don't have permissions to rename this content"));
+    return 0;
   }
 }
 /**
@@ -694,6 +696,10 @@ function outline_designer_book_process_duplicate($nid, $multiple, $dup_title) {
     $node = node_load($nid);
     $orig_node = $node;
     $node->nid = NULL;
+    $node->vid = NULL;
+    if (isset($node->uuid)) {
+      $node->uuid = NULL;
+    }
     $node->created = NULL;
     $node->book['mlid'] = NULL;
     $node->book['has_children'] = 0;
@@ -703,11 +709,12 @@ function outline_designer_book_process_duplicate($nid, $multiple, $dup_title) {
     $node->title = $new_title;
     if (node_access('create', $node) && node_access('view', $orig_node)) {
       node_save($node);
-      $msg = t('%type: duplicated %title from node %nid.', array('%type' => $node->type, '%title' => $node->title, '%nid' => $nid));
       watchdog('content', $msg);
-      return t('Content duplicated from %title (%nid).', array('%title' => $node->title, '%nid' => $nid));
+      drupal_set_message(t('Content duplicated from %title (%nid).', array('%title' => $node->title, '%nid' => $nid)));
+      return 1;
     }
     else {
+      drupal_set_message(t('Duplicate denied because of permissions.'));
       return 0;
     }
   }
@@ -741,13 +748,18 @@ function outline_designer_book_process_duplicate($nid, $multiple, $dup_title) {
       )
       ->orderBy('depth', 'asc')
       ->execute();
-      
+      // loop through each deep hierarchy result and replicate it
       foreach ($result as $value) {
         $dup_node = node_load(str_replace('node/', '', $value->link_path));
         $orig_node = $dup_node;
         $current_nid = $dup_node->nid;
         $old_nid = $dup_node->nid;
         $dup_node->nid = NULL;
+        $dup_node->vid = NULL;
+        // account for uuid
+        if (isset($dup_node->uuid)) {
+          $dup_node->uuid = NULL;
+        }
         $dup_node->created = NULL;
         $dup_node->path = NULL;
         $dup_node->uid = $user->uid;
@@ -775,10 +787,12 @@ function outline_designer_book_process_duplicate($nid, $multiple, $dup_title) {
     }
     // perm failure, blocked from happening
     if ($permission_fail) {
+      drupal_set_message(t('Duplicate denied because of permissions.'));
       return 0;
     }
     else {
-      return t('Content duplicated (nids:%nids)', array('%nids' => $nids));
+      drupal_set_message(t('Content duplicated (nids:%nids)', array('%nids' => $nids)));
+      return 1;
     }
   }
 }
@@ -793,7 +807,8 @@ function outline_designer_book_process_delete($nid, $multiple, $var3) {
     // verify access for delete condition
     if (node_access('delete', $node)) {
       node_delete($nid);
-      return t('Content deleted (nid:%nid)', array('%nid' => $nid));
+      drupal_set_message(t('%title deleted (nid:%nid)', array('%title' => $node->title, '%nid' => $nid)));
+      return 1;
     }
     else {
       return 0;
@@ -838,6 +853,7 @@ function outline_designer_book_process_delete($nid, $multiple, $var3) {
         if (node_access('delete', $node)) {
           $del_count++;
           node_delete($node->nid);
+          drupal_set_message(t('%title deleted (nid:%nid)', array('%title' => $node->title, '%nid' => $nid)));
         }
       }
     }
@@ -847,10 +863,12 @@ function outline_designer_book_process_delete($nid, $multiple, $var3) {
     }
     // verify that all content that was deleted matched selected amount
     elseif ($count != $del_count) {
-      return t("A multiple delete was commited but you didn't have the permissions to delete all content so some remain.");
+      drupal_set_message(t("A multiple delete was commited but you didn't have the permissions to delete all content so some remain."));
+      return 0;
     }
     else {
-      return t("All content deleted successfully.");
+      drupal_set_message(t("All content deleted successfully."));
+      return 0;
     }
   }
 }
@@ -862,18 +880,19 @@ function outline_designer_book_process_change_type($nid, $new_type, $var3) {
   $node = node_load($nid);
   // need update rights or do nothing
   if (node_access('update', $node)) {
-    // make message, we put this a lot of places as type change is abnormal
-    $msg = t('Outline Designer -- Content Type changed from %type to %new_type', array('%type' => $node->type, '%new_type' => $new_type));
     // add it to the log
+    $msg = t('Outline Designer -- Content Type changed from %type to %new_type', array('%type' => $node->type, '%new_type' => $new_type));
     $node->log = $msg;
     $node->type = $new_type;
     // write to the watch dog
     watchdog('content', $msg);
     node_save($node);
     // return to the screen
-    return $msg;
+    drupal_set_message($msg);
+    return 1;
   }
   else {
+    drupal_set_message(t("You don't have sufficient permissions!"));
     return 0;
   }
 }
@@ -894,10 +913,12 @@ function outline_designer_book_process_drag_drop($nid, $parent_nid, $weight) {
     $node->revision = 1;
     $node->log = t("Outline Designer -- nid:%nid parent nid changed to %parent_nid", array('%nid' => $nid, '%parent_nid' => $parent_nid));
     node_save($node);
-    return t("Content position has been updated (nid:%nid)", array('%nid' => $nid));
+    drupal_set_message(t("Content position has been updated (nid:%nid)", array('%nid' => $nid)));
+    return 1;
   }
   else {
-    return t("Content position has not been updated due to invalid permissions!");
+    drupal_set_message(t("Content position has not been updated due to invalid permissions!"));
+    return 0;
   }
 }
 
@@ -911,10 +932,12 @@ function outline_designer_book_process_reweight($nid, $weight, $var3) {
     // set parent / weight
     $node->book['weight'] = $weight;
     node_save($node);
-    return t("Position has been updated (nid:%nid)", array('%nid' => $nid));
+    drupal_set_message(t("Position has been updated (nid:%nid)", array('%nid' => $nid)));
+    return 1;
   }
   else {
-    return t("Position has not been updated due to invalid permissions!");
+    drupal_set_message(t("Position has not been updated due to invalid permissions!"));
+    return 0;
   }
 }
 
@@ -923,14 +946,12 @@ function outline_designer_book_process_reweight($nid, $weight, $var3) {
  */
 function outline_designer_book_admin_edit($form, &$form_state) {
   // submit the table we were passed
-  book_admin_edit_submit($form, $form_state);
+  _outline_designer_book_admin_edit_submit($form, $form_state);
   // reset the static representation of the tree
   drupal_static_reset('book_menu_subtree_data');
   // clear caches related to this book / menu tree
   $cid = 'links:' . $form['#node']->book['menu_name'];
   cache_clear_all($cid, 'cache_menu', TRUE);
-  //$form_state['cache'] = FALSE;
-  //$form_state['rebuild'] = TRUE;
   // build the new edit form
   $form = drupal_rebuild_form('book_admin_edit', $form_state, $form);
   return $form;
@@ -948,19 +969,15 @@ function outline_designer_book_theme_registry_alter(&$theme_registry) {
  */
 function theme_outline_designer_book_admin_table($variables) {
   $form = $variables['form'];
-
   drupal_add_tabledrag('book-outline', 'match', 'parent', 'book-plid', 'book-plid', 'book-mlid', TRUE, MENU_MAX_DEPTH - 2);
   drupal_add_tabledrag('book-outline', 'order', 'sibling', 'book-weight');
-
   $header = array(t('Title'), t('Weight'), t('Parent'), t('Operations'));
-
   $rows = array();
   $destination = drupal_get_destination();
   $access = user_access('administer nodes');
   foreach (element_children($form) as $key) {
     $nid = $form[$key]['nid']['#value'];
     $href = $form[$key]['href']['#value'];
-
     // Add special classes to be used with tabledrag.js.
     $form[$key]['plid']['#attributes']['class'] = array('book-plid');
     $form[$key]['mlid']['#attributes']['class'] = array('book-mlid');
@@ -996,6 +1013,40 @@ function theme_outline_designer_book_admin_table($variables) {
     $row['class'][] = 'draggable';
     $rows[] = $row;
   }
-
   return theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'book-outline')));
+}
+
+/**
+ * Copy of Form submission handler for book_admin_edit().
+ *
+ * The difference is that this doesn't set a message indicating it was saved
+ */
+function _outline_designer_book_admin_edit_submit($form, &$form_state) {
+  // Save elements in the same order as defined in post rather than the form.
+  // This ensures parents are updated before their children, preventing orphans.
+  $order = array_flip(array_keys($form_state['input']['table']));
+  $form['table'] = array_merge($order, $form['table']);
+  foreach (element_children($form['table']) as $key) {
+    if ($form['table'][$key]['#item']) {
+      $row = $form['table'][$key];
+      $values = $form_state['values']['table'][$key];
+      // Update menu item if moved.
+      if ($row['plid']['#default_value'] != $values['plid'] || $row['weight']['#default_value'] != $values['weight']) {
+        $row['#item']['plid'] = $values['plid'];
+        $row['#item']['weight'] = $values['weight'];
+        menu_link_save($row['#item']);
+      }
+      // Update the title if changed.
+      if ($row['title']['#default_value'] != $values['title']) {
+        $node = node_load($values['nid']);
+        $langcode = LANGUAGE_NONE;
+        $node->title = $values['title'];
+        $node->book['link_title'] = $values['title'];
+        $node->revision = 1;
+        $node->log = t('Title changed from %original to %current.', array('%original' => $node->title, '%current' => $values['title']));
+        node_save($node);
+        watchdog('content', 'book: updated %title.', array('%title' => $node->title), WATCHDOG_NOTICE, l(t('view'), 'node/' . $node->nid));
+      }
+    }
+  }
 }
