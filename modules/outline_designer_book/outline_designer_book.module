@@ -403,40 +403,9 @@ function outline_designer_book_outline_designer_form_overlay() {
     }
   }
   $typeoutput .= '</tr></table>';
-  $duplicate_form['od_duplicate_number'] = array(
-    '#title' => t('How many copies would you like?'),
-    '#type' => 'select',
-    '#id' => 'od_duplicate_number',
-    '#description' => t('Duplicates will be performed one at a time to avoid load issues'),
-    '#options' => array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15),
-    '#required' => TRUE,
-    '#default_value' => 1,
-    '#weight' => 0,
-  );
-  $duplicate_form['od_duplicate_multiple'] = array(
-    '#title' => t('Duplicate hierarchy'),
-    '#id' => 'od_duplicate_multiple',
-    '#type' => 'checkbox',
-    '#attributes' => array('checked' => 'checked'),
-    '#description' => t('If checked, the current content and all child pages will be duplicated'),
-    '#weight' => 1,
-  );
-  $duplicate_form['od_duplicate_title'] = array(
-    '#title' => t('Title format'),
-    '#id' => 'od_duplicate_title',
-    '#type' => 'textfield',
-    '#required' => TRUE,
-    '#size' => 20,
-    '#description' => t('Tokens: @title = content title; @i = duplicate number'),
-    '#weight' => 2,
-  );
   // delete form
-  $delete_form['od_delete_multiple'] = array(
-    '#title' => t('Delete hierarchy'),
-    '#id' => 'od_delete_multiple',
-    '#type' => 'checkbox',
-    '#description' => t('Warning: This action cannot be undone.'),
-    '#weight' => 0,
+  $delete_form = array(
+    '#markup' => t('Are you sure you want to delete this content?'),
   );
   // add form
   $add_form['od_add_content_title'] = array(
@@ -450,10 +419,7 @@ function outline_designer_book_outline_designer_form_overlay() {
     '#weight' => 0,
     '#suffix' => $typeoutput,
   );
-  $output = '<div id="od_duplicate" class="od_uiscreen">
-    ' . drupal_render($duplicate_form) . '
-  </div>
-  <div id="od_delete" class="od_uiscreen">
+  $output = '<div id="od_delete" class="od_uiscreen">
     ' . drupal_render($delete_form) . '
   </div>
   <div id="od_change_type" class="od_uiscreen">
@@ -523,11 +489,6 @@ function outline_designer_book_outline_designer_operations_alter(&$ops, $type) {
           'title' => t('Delete'),
           'icon' => $icon_path . 'delete.png',
           'callback' => 'outline_designer_book_process_delete',
-        ),
-        'duplicate' => array(
-          'title' => t('Duplicate'),
-          'icon' => $icon_path . 'duplicate.png',
-          'callback' => 'outline_designer_book_process_duplicate',
         ),
         'change_type' => array(
           'title' => t('Change type'),
@@ -683,194 +644,21 @@ function outline_designer_book_process_rename($nid, $newtitle, $var3) {
   }
 }
 /**
- * Callback for duplicate ajax call from outline designer.
- */
-function outline_designer_book_process_duplicate($nid, $multiple, $dup_title) {
-  global $user;
-  // need to account for the 3 weird characters in URLs
-  $dup_title = str_replace("@2@F@", '/', $dup_title);
-  $dup_title = str_replace("@2@3@", '#', $dup_title);
-  $dup_title = str_replace("@2@B@", '+', $dup_title);
-  // only duplicate 1 item
-  if ($multiple == 0) {
-    $node = node_load($nid);
-    $orig_node = $node;
-    $node->nid = NULL;
-    $node->vid = NULL;
-    if (isset($node->uuid)) {
-      $node->uuid = NULL;
-    }
-    $node->created = NULL;
-    $node->book['mlid'] = NULL;
-    $node->book['has_children'] = 0;
-    $node->uid = $user->uid;
-    // swap out the title
-    $new_title = str_replace('@title', $node->title, $dup_title);
-    $node->title = $new_title;
-    if (node_access('create', $node) && node_access('view', $orig_node)) {
-      node_save($node);
-      watchdog('content', $msg);
-      drupal_set_message(t('Content duplicated from %title (%nid).', array('%title' => $node->title, '%nid' => $nid)));
-      return 1;
-    }
-    else {
-      drupal_set_message(t('Duplicate denied because of permissions.'));
-      return 0;
-    }
-  }
-  else {
-    // snag the whole branch if multiple == 1
-    $permission_fail = FALSE;
-    $nids = $nid;
-    $map = array();
-    $node = node_load($nid);
-    // pull only the nodes that have the original node as a parent
-    $mlid = $node->book['mlid'];
-    // ensure this is a real value
-    if ($mlid != 0 && $mlid != '') {
-      $result = db_select('menu_links', 'ml')
-      ->fields('ml', array('link_path'))
-      ->condition(db_or()
-        ->condition('p2', $mlid)
-        ->condition('p3', $mlid)
-      ->condition(db_or()
-        ->condition('p4', $mlid)
-        ->condition('p5', $mlid)
-      ->condition(db_or()
-        ->condition('p6', $mlid)
-        ->condition('p7', $mlid)
-      ->condition(db_or()
-        ->condition('p8', $mlid)
-        ->condition('p9', $mlid)
-      )
-      )
-      )
-      )
-      ->orderBy('depth', 'asc')
-      ->execute();
-      // loop through each deep hierarchy result and replicate it
-      foreach ($result as $value) {
-        $dup_node = node_load(str_replace('node/', '', $value->link_path));
-        $orig_node = $dup_node;
-        $current_nid = $dup_node->nid;
-        $old_nid = $dup_node->nid;
-        $dup_node->nid = NULL;
-        $dup_node->vid = NULL;
-        // account for uuid
-        if (isset($dup_node->uuid)) {
-          $dup_node->uuid = NULL;
-        }
-        $dup_node->created = NULL;
-        $dup_node->path = NULL;
-        $dup_node->uid = $user->uid;
-        // swap out the title
-        $dup_node->title = str_replace('@title', $dup_node->title, $dup_title);
-        $old_mlid = $dup_node->book['mlid'];
-        $dup_node->book['mlid'] = NULL;
-        $dup_node->log = t("Outline Designer -- Duplicate of old node nid:%old_nid", array('%old_nid' => $old_nid));
-        if (isset($map[$dup_node->book['plid']]) ) {
-          $dup_node->book['plid'] = $map[$dup_node->book['plid']];
-        }
-        if (node_access('create', $dup_node) && node_access('view', $orig_node)) {
-          node_save($dup_node);
-          $map[$old_mlid] = $dup_node->book['mlid'];
-          watchdog('content', '%type: duplicated %title from node %current_nid.', array('%type' => $dup_node->type, '%title' => $dup_node->title, '%current_nid' => $current_nid));
-          $nids .= ', ' . $old_nid;
-        }
-        else {
-          $permission_fail = TRUE;
-        }
-      }
-    }
-    else {
-      $permission_fail = TRUE;
-    }
-    // perm failure, blocked from happening
-    if ($permission_fail) {
-      drupal_set_message(t('Duplicate denied because of permissions.'));
-      return 0;
-    }
-    else {
-      drupal_set_message(t('Content duplicated (nids:%nids)', array('%nids' => $nids)));
-      return 1;
-    }
-  }
-}
-/**
  * Callback for delete ajax call from outline designer.
  */
-function outline_designer_book_process_delete($nid, $multiple, $var3) {
+function outline_designer_book_process_delete($nid, $var3) {
   // load node
   $node = node_load($nid);
-  // check for multiple or single delete
-  if ($multiple == 0) {
-    // verify access for delete condition
-    if (node_access('delete', $node)) {
-      node_delete($nid);
-      drupal_set_message(t('%title deleted (nid:%nid)', array('%title' => $node->title, '%nid' => $nid)));
-      return 1;
-    }
-    else {
-      return 0;
-    }
-  }
-  else {
-    // pull only the nodes that have this node as a parent
-    $mlid = $node->book['mlid'];
-    // make sure this isn't used to delete non book nodes
-    $del_count = 0;
-    $count = 0;
-    // verify this is in a menu, this is an additional form of protection
-    if ($mlid != 0 && $mlid != '') {
-      // select everything that has this mlid as a parent
-      // the verification previous to this ensures massive chaos isn't invoked
-      $result = db_select('menu_links', 'ml')
-        ->fields('ml', array('link_path'))
-        ->condition('ml.module', 'book')
-      ->condition(db_or()
-        ->condition('p1', $mlid)
-        ->condition('p2', $mlid)
-      ->condition(db_or()
-        ->condition('p3', $mlid)
-        ->condition('p4', $mlid)
-      ->condition(db_or()
-        ->condition('p5', $mlid)
-        ->condition('p6', $mlid)
-      ->condition(db_or()
-        ->condition('p7', $mlid)
-        ->condition('p8', $mlid)
-        ->condition('p9', $mlid)
-      )
-      )
-      )
-      )
-  ->execute();
-      // loop through deletes
-      foreach ($result as $value) {
-        $count++;
-        $node = node_load(str_replace('node/', '', $value->link_path));
-        // ensure access even though this is largly an admin only routine
-        if (node_access('delete', $node)) {
-          $del_count++;
-          node_delete($node->nid);
-          drupal_set_message(t('%title deleted (nid:%nid)', array('%title' => $node->title, '%nid' => $nid)));
-        }
-      }
-    }
-    // we didn't delete anything, return nothing
-    if ($del_count == 0) {
-      return 0;
-    }
-    // verify that all content that was deleted matched selected amount
-    elseif ($count != $del_count) {
-      drupal_set_message(t("A multiple delete was commited but you didn't have the permissions to delete all content so some remain."));
-      return 0;
-    }
-    else {
-      drupal_set_message(t("All content deleted successfully."));
-      return 0;
-    }
-  }
+	// verify access for delete condition
+	if (node_access('delete', $node)) {
+		node_delete($nid);
+		drupal_set_message(t('%title deleted (nid:%nid)', array('%title' => $node->title, '%nid' => $nid)));
+		return 1;
+	}
+	else {
+		drupal_set_message(t('Access denied, you are not allowed to delete this content.'));
+		return 0;
+	}
 }
 /**
  * Callback for change_type ajax call from outline designer.
