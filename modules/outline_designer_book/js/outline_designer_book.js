@@ -162,7 +162,7 @@ Drupal.outline_designer.render_popup = function(render_title) {
   // define function for rename
   Drupal.outline_designer_ops.rename = function() {
     Drupal.outline_designer_ops.active('span').css('display','none');
-    Drupal.outline_designer_ops.active('input').css('display','');
+    Drupal.outline_designer_ops.active('input').css('display','block');
     Drupal.outline_designer_ops.active('input').focus();
   };
   // define function for change_type
@@ -172,13 +172,6 @@ Drupal.outline_designer.render_popup = function(render_title) {
     Drupal.outline_designer.render_popup(true);
     $("#od_change_type input.type_radio").val([Drupal.outline_designer.get_active_type()]);
     Drupal.settings.outline_designer.activeType = Drupal.outline_designer.get_active_type();
-  };
-  // define function for duplicate
-  Drupal.outline_designer_ops.duplicate = function() {
-    $("#od_duplicate_title").val("@title");
-    $(".od_submit_button").val('Duplicate');
-    Drupal.outline_designer.render_popup(true);
-    $("#od_duplicate_title").focus();
   };
   // define function for add_content
   Drupal.outline_designer_ops.add_content = function() {
@@ -222,24 +215,6 @@ Drupal.outline_designer.render_popup = function(render_title) {
   Drupal.outline_designer_ops.change_type_submit_success = function(msg) {
     $("#reload_table").trigger('change');
   };
-  Drupal.outline_designer_ops.duplicate_submit = function() {
-    var dup_title = $.param($("#od_duplicate_title"));
-    dup_title = dup_title.replace(/%2F/g,"@2@F@"); //weird escape for ajax with /
-    dup_title = dup_title.replace(/%23/g,"@2@3@"); //weird escape for ajax with #
-    dup_title = dup_title.replace(/%2B/g,"@2@B@"); //weird escape for ajax with +
-    dup_title = dup_title.substr(1);
-    var times_to_dup = Number($("#od_duplicate_number").val()) + 1.0;
-    var tmp_dup_title = '';
-    for(var i=0; i<times_to_dup; i++) {
-      tmp_dup_title = dup_title.replace('%40i',(i+1)); //account for iteration token if used
-      // standard ajax call
-      Drupal.outline_designer.ajax_call(Drupal.settings.outline_designer.type, 'duplicate', Drupal.settings.outline_designer.activeNid, $('#od_duplicate_multiple:checked').length, tmp_dup_title);
-      //this way the iteration doesn't trigger i times
-      if (times_to_dup == (i+1)) {
-        $("#reload_table").trigger('change');
-      }
-    }
-  };
   Drupal.outline_designer_ops.add_content_submit = function() {
     var title = $.param($("#od_add_content_title"));
     title = title.replace(/%2F/g,"@2@F@"); //weird escape for ajax with /
@@ -259,25 +234,17 @@ Drupal.outline_designer.render_popup = function(render_title) {
     $("#reload_table").trigger('change');
   };
   Drupal.outline_designer_ops.delete_submit = function() {
-    var multiple = $('#od_delete_multiple:checked').length;
-    Drupal.outline_designer.ajax_call(Drupal.settings.outline_designer.type, 'delete', Drupal.settings.outline_designer.activeNid, multiple, null);
+    Drupal.outline_designer.ajax_call(Drupal.settings.outline_designer.type, 'delete', Drupal.settings.outline_designer.activeNid, null, null);
   };
-  
   // reset handlers
   Drupal.outline_designer_ops.edit_reset = function() {};
   Drupal.outline_designer_ops.view_reset = function() {};
   Drupal.outline_designer_ops.rename_reset = function() {};
   Drupal.outline_designer_ops.change_type_reset = function() {};
-  Drupal.outline_designer_ops.duplicate_reset = function() {
-    $("#od_duplicate_multiple").attr("checked", true);
-  };
+  Drupal.outline_designer_ops.delete_reset = function() {};
   Drupal.outline_designer_ops.add_content_reset = function() {
     $("#od_add_content_title").val('');
   };
-  Drupal.outline_designer_ops.delete_reset = function() {
-    $("#od_delete_multiple").attr("checked", false);
-  };
-  
   // special behaviors for the overlay
   Drupal.behaviors.outlineDesignerChangeType = {
     attach: function (context, settings) {
