@@ -15,8 +15,6 @@ Drupal.theme.tableDragChangedWarning = function () {
  * events to update interface
  */
 $(document).ready(function() {
-  //due to a previous glitch that loaded inefficiently, this will force it to only load once
-  $('body').append('<div id="od_growl" align="center"></div>');
   //if everything's been told to close, close it all
   if (Drupal.settings.outline_designer.collapseToggle == 1) {
     Drupal.outline_designer.collapseAll();
